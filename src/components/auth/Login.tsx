@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AuthService, { type LoginData } from "../../services/AuthService";
 
 export default function Login() {
-  const [form, setForm] = useState<LoginData>({ email: "", password: "" });
+  const [form, setForm] = useState<LoginData>({ username: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -12,7 +12,6 @@ export default function Login() {
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    console.log("Submitting login form:", form);
     e.preventDefault();
     setError(null);
     try {
@@ -32,12 +31,12 @@ export default function Login() {
             {error && <div className="alert alert-danger">{error}</div>}
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label className="form-label">Email</label>
+                <label className="form-label">Username</label>
                 <input
-                  type="email"
-                  name="email"
+                  type="text"
+                  name="username"
                   className="form-control"
-                  value={form.email}
+                  value={form.username}
                   onChange={handleChange}
                   required
                 />

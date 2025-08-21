@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export interface LoginData {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -20,9 +20,7 @@ class AuthService {
   async login(data: LoginData) {
     try {
       const response = await axios.post(`${API_URL}/login`, data);
-      console.log(response.data);
-      // Save JWT token to localStorage (or cookies)
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("token", response.data.AccessToken);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Login failed");
@@ -32,7 +30,6 @@ class AuthService {
   async register(data: RegisterData) {
     try {
       const response = await axios.post(`${API_URL}/register`, data);
-      console.log(response.data);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Registration failed");
