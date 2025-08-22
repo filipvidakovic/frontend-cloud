@@ -1,5 +1,3 @@
-// src/services/api.ts
-
 const API_URL = import.meta.env.VITE_API_URL;
 // Example: https://abc123.execute-api.eu-central-1.amazonaws.com/prod
 
