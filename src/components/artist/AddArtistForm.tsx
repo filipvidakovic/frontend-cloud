@@ -1,16 +1,16 @@
 import { useState } from "react";
 
-interface AddArtistFormProps {
-  onSubmit: (artist: {
+export default function AddArtistForm() {
+    const onSubmit = (artist: {
     firstName: string;
     lastName: string;
     age: number;
     bio: string;
     genres: string[];
-  }) => void;
-}
-
-export default function AddArtistForm({ onSubmit }: AddArtistFormProps) {
+  }) => {
+    console.log("New artist added:", artist);
+    alert(`Artist ${artist.firstName} ${artist.lastName} added!`);
+  };
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [age, setAge] = useState("");
