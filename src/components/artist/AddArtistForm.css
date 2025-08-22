@@ -1,0 +1,23 @@
+/* AddArtistForm styling */
+.add-artist-form {
+  max-width: 600px; /* was inline */
+}
+
+.add-artist-form h2 {
+  margin-bottom: 1rem; /* mb-3 */
+}
+
+.add-artist-form input,
+.add-artist-form textarea {
+  background-color: #f8f9fa; /* bg-light */
+  color: #212529; /* text-dark */
+  border: 1px solid #ced4da; /* border */
+}
+
+.add-artist-form .btn-outline-primary {
+  border-width: 1px;
+}
+
+.add-artist-form .badge {
+  font-size: 0.85rem;
+}
