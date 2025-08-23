@@ -1,0 +1,13 @@
+.upload-page .form-label {
+  font-weight: 500;
+}
+
+.upload-page input,
+.upload-page button {
+  font-size: 1rem;
+}
+
+.upload-page button {
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+}
