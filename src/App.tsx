@@ -2,14 +2,13 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import Home from "./components/HomePage";
-import AddArtistForm from "./components/AddArtistForm";
 import AuthService from "./services/AuthService";
 import { useState } from "react";
-
+import DiscoverPage from "./pages/DiscoverPage";
 function App() {
-
-
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(AuthService.isAuthenticated());
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
+    AuthService.isAuthenticated()
+  );
 
   const handleLogout = () => {
     AuthService.logout();
@@ -83,11 +82,19 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="*" element={<h2 className="text-center">Page Not Found</h2>} />
-          <Route path="/new-artist" element={<AddArtistForm/>} />
-          <Route path="/new-content" element={<h2 className="text-center">New Content Page</h2>} />
-          <Route path="/discover" element={<h2 className="text-center">Discover Page</h2>} />
-          <Route path="/subscriptions" element={<h2 className="text-center">Subscriptions Page</h2>} />
+          <Route
+            path="*"
+            element={<h2 className="text-center">Page Not Found</h2>}
+          />
+          <Route
+            path="/new-content"
+            element={<h2 className="text-center">New Content Page</h2>}
+          />
+          <Route path="/discover" element={<DiscoverPage />} />
+          <Route
+            path="/subscriptions"
+            element={<h2 className="text-center">Subscriptions Page</h2>}
+          />
         </Routes>
       </div>
     </Router>
