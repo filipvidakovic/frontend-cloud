@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./UploadMusicPage.css";
+import MusicService from "../services/MusicService";
 
 const UploadMusicPage: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -24,6 +25,7 @@ const UploadMusicPage: React.FC = () => {
     if (!file) return alert("Please select an audio file.");
     setLoading(true);
     setError(null);
+
     try {
       const fileContent = await toBase64(file);
       const coverImage = cover ? await toBase64(cover) : null;
@@ -33,22 +35,16 @@ const UploadMusicPage: React.FC = () => {
         fileName: file.name,
         fileContent,
         genres: genres.split(",").map((g) => g.trim()),
-        artistIds: [], // Placeholder until artist selection is integrated
-        albumName: albumName || null,
+        artistIds: ['1'], // Replace with actual artist selection
+        albumId: albumName || null,
         coverImage,
       };
 
-      const res = await fetch("<YOUR_API_GATEWAY_ENDPOINT>", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
+      const data = await MusicService.uploadMusic(payload);
       setResponse(data);
     } catch (err: any) {
       console.error("Upload error:", err);
-      setError("Upload failed. Please try again.");
+      setError(err.message || "Upload failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -116,8 +112,8 @@ const UploadMusicPage: React.FC = () => {
         </div>
 
         <div className="mb-4">
-          <button type="button" className="btn btn-outline-primary w-100">
-            Select Artist
+          <button type="button" className="btn btn-outline-primary w-100" disabled>
+            Select Artist (Coming Soon)
           </button>
         </div>
 
@@ -134,7 +130,7 @@ const UploadMusicPage: React.FC = () => {
 
       {response && (
         <div className="alert alert-success mt-4">
-          <pre className="mb-0">{JSON.stringify(response, null, 2)}</pre>
+          {response.message || "Song uploaded successfully!"}
         </div>
       )}
     </div>
