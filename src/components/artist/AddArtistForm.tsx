@@ -1,122 +1,128 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import ArtistService from "../../services/ArtistService";
 
-export default function AddArtistForm() {
-    const onSubmit = (artist: {
-    firstName: string;
-    lastName: string;
-    age: number;
-    bio: string;
-    genres: string[];
-  }) => {
-    console.log("New artist added:", artist);
-    alert(`Artist ${artist.firstName} ${artist.lastName} added!`);
-  };
+const AddArtistForm: React.FC = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [age, setAge] = useState("");
   const [bio, setBio] = useState("");
-  const [genreInput, setGenreInput] = useState("");
-  const [genres, setGenres] = useState<string[]>([]);
+  const [genres, setGenres] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAddGenre = () => {
-    const trimmed = genreInput.trim();
-    if (trimmed && !genres.includes(trimmed)) {
-      setGenres([...genres, trimmed]);
-      setGenreInput("");
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !age || !bio || genres.length === 0) {
-      alert("Please fill in all fields!");
+
+    if (!firstName || !lastName || !age) {
+      setError("First name, last name, and age are required.");
       return;
     }
-    onSubmit({
-      firstName,
-      lastName,
+
+    const artist = {
+      name: firstName,
+      lastname: lastName,
       age: parseInt(age, 10),
-      bio,
-      genres,
-    });
-    // Clear form
-    setFirstName("");
-    setLastName("");
-    setAge("");
-    setBio("");
-    setGenres([]);
-    setGenreInput("");
+      bio: bio || "",
+      genres: genres ? genres.split(",").map((g) => g.trim()) : [],
+    };
+
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await ArtistService.addArtist(artist);
+      setResponse(result);
+      window.alert(`🎉 Artist ${firstName} ${lastName} added successfully!`);
+      setFirstName("");
+      setLastName("");
+      setAge("");
+      setBio("");
+      setGenres("");
+    } catch (err: any) {
+      console.error("Error submitting artist:", err);
+      setError(err.message || "Failed to add artist");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="add-artist-form bg-white text-dark p-4 rounded shadow w-100 mw-500 d-flex flex-column gap-3"
-    >
-      <h2 className="text-center">Add New Artist</h2>
+    <div className="upload-page container mt-5">
+      <h1 className="display-4 mb-3 text-center">Add New Artist</h1>
+      <p className="lead text-center mb-4">
+        Fill in the required fields to add a new artist 🎤
+      </p>
 
-      <input
-        type="text"
-        className="form-control"
-        placeholder="First Name"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-      />
-      <input
-        type="text"
-        className="form-control"
-        placeholder="Last Name"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-      />
-      <input
-        type="number"
-        className="form-control"
-        placeholder="Age"
-        value={age}
-        onChange={(e) => setAge(e.target.value)}
-      />
-      <textarea
-        className="form-control"
-        placeholder="Bio"
-        value={bio}
-        onChange={(e) => setBio(e.target.value)}
-        rows={4}
-      />
-
-      <div>
-        <label className="form-label fw-bold">Genres:</label>
-        <div className="d-flex gap-2 mb-2">
+      <form
+        onSubmit={handleSubmit}
+        className="mx-auto"
+        style={{ maxWidth: "600px" }}
+      >
+        <div className="mb-3">
+          <label className="form-label">First Name</label>
           <input
             type="text"
             className="form-control"
-            placeholder="Enter genre"
-            value={genreInput}
-            onChange={(e) => setGenreInput(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
           />
-          <button
-            type="button"
-            className="btn btn-outline-primary"
-            onClick={handleAddGenre}
-          >
-            Add
-          </button>
         </div>
 
-        {genres.length > 0 && (
-          <div className="d-flex flex-wrap gap-2">
-            {genres.map((g, idx) => (
-              <span key={idx} className="badge bg-primary text-light">
-                {g}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+        <div className="mb-3">
+          <label className="form-label">Last Name</label>
+          <input
+            type="text"
+            className="form-control"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+          />
+        </div>
 
-      <button type="submit" className="btn btn-primary mt-2">
-        Add Artist
-      </button>
-    </form>
+        <div className="mb-3">
+          <label className="form-label">Age</label>
+          <input
+            type="number"
+            className="form-control"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Bio (optional)</label>
+          <textarea
+            className="form-control"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={4}
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">
+            Genres (optional, comma-separated)
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            value={genres}
+            onChange={(e) => setGenres(e.target.value)}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="btn btn-primary w-100"
+          disabled={loading}
+        >
+          {loading ? "Adding..." : "Add Artist"}
+        </button>
+      </form>
+    </div>
   );
-}
+};
+
+export default AddArtistForm;
