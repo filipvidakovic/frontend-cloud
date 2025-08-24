@@ -2,24 +2,30 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export interface UploadMusicData {
+// Base interface for shared music fields
+interface BaseMusicData {
   title: string;
   fileName: string;
-  fileContent: string; // base64 string
   genres: string[];
   artistIds: string[];
   albumId?: string | null;
-  coverImage?: string | null; // base64 string (optional)
+  coverImage?: string | null; // optional for both
 }
 
-export interface UpdateMusicData extends UploadMusicData {
+// Upload requires fileContent
+export interface UploadMusicData extends BaseMusicData {
+  fileContent: string; // ✅ required
+}
+
+// Update allows optional fileContent
+export interface UpdateMusicData extends BaseMusicData {
   musicId: string;
+  fileContent?: string; // ✅ optional
 }
 
 class MusicService {
   async uploadMusic(data: UploadMusicData) {
     try {
-        console.log("Request URL:", `${API_URL}/music`);
       const token = localStorage.getItem("token");
       const response = await axios.post(`${API_URL}/music`, data, {
         headers: {
@@ -53,13 +59,18 @@ class MusicService {
 
   async updateMusic(data: UpdateMusicData) {
     try {
-      const response = await axios.put(`${API_URL}/music`, data);
+      const token = localStorage.getItem("token");
+      const response = await axios.put(`${API_URL}/music`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Update failed");
     }
   }
-
 }
 
 export default new MusicService();

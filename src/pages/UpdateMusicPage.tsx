@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import MusicService, { type UploadMusicData } from "../services/MusicService";
+import MusicService, { type UpdateMusicData } from "../services/MusicService";
 import "./UpdateMusicPage.css";
 
 const UpdateMusicPage: React.FC = () => {
   const { genre, musicId } = useParams();
-  const [formData, setFormData] = useState<UploadMusicData>({
+  const [formData, setFormData] = useState<UpdateMusicData>({
+    musicId: "", 
     title: "",
     fileName: "",
     fileContent: "",
@@ -35,6 +36,7 @@ const UpdateMusicPage: React.FC = () => {
     MusicService.getMusicDetails(genre, musicId)
       .then((data) => {
         setFormData({
+          musicId: musicId,
           title: data.title,
           fileName: data.fileName,
           fileContent: "", // must be re-uploaded
@@ -63,17 +65,16 @@ const UpdateMusicPage: React.FC = () => {
     setLoading(true);
 
     try {
-      if (!file) throw new Error("Please select a new audio file");
       if (!musicId) throw new Error("Music ID is missing from URL");
 
-      const fileContent = await toBase64(file);
-      const coverImage = cover ? await toBase64(cover) : null;
+      const fileContent = file ? await toBase64(file) : undefined;
+      const coverImage = cover ? await toBase64(cover) : undefined;
 
       const payload = {
         ...formData,
-        fileContent,
-        coverImage,
         musicId,
+        ...(fileContent && { fileContent }),
+        ...(coverImage !== undefined && { coverImage }), // even if it's null, send it
       };
       
       const result = await MusicService.updateMusic(payload);
@@ -105,13 +106,12 @@ const UpdateMusicPage: React.FC = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">New Audio File</label>
+            <label className="form-label">New Audio File (optional)</label>
             <input
               type="file"
               accept="audio/*"
               className="form-control"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              required
             />
           </div>
 
@@ -153,22 +153,6 @@ const UpdateMusicPage: React.FC = () => {
                   albumId: e.target.value || null,
                 }))
               }
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Artist IDs (comma separated)</label>
-            <input
-              className="form-control"
-              name="artistIds"
-              value={formData.artistIds.join(", ")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  artistIds: e.target.value.split(",").map((id) => id.trim()),
-                }))
-              }
-              required
             />
           </div>
 
