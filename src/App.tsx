@@ -50,7 +50,7 @@ function App() {
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/update-music/pop/6189d1a0-089e-4599-8d87-e35cca720233">Update Music</Link>
+                <Link className="nav-link" to="/update-music/">Update Music</Link>
               </li>
               <li className="nav-item">
                 <Link className="nav-link" to="/discover">
