@@ -12,6 +12,10 @@ export interface UploadMusicData {
   coverImage?: string | null; // base64 string (optional)
 }
 
+export interface UpdateMusicData extends UploadMusicData {
+  musicId: string;
+}
+
 class MusicService {
   async uploadMusic(data: UploadMusicData) {
     try {
@@ -46,6 +50,16 @@ class MusicService {
       throw new Error(error.response?.data?.error || "Failed to fetch music details");
     }
   }
+
+  async updateMusic(data: UpdateMusicData) {
+    try {
+      const response = await axios.put(`${API_URL}/music`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || "Update failed");
+    }
+  }
+
 }
 
 export default new MusicService();
