@@ -6,6 +6,7 @@ import AuthService from "./services/AuthService";
 import { useState } from "react";
 import DiscoverPage from "./pages/DiscoverPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
+import AddArtistForm from "./components/artist/AddArtistForm";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -88,9 +89,9 @@ function App() {
             path="*"
             element={<h2 className="text-center">Page Not Found</h2>}
           />
-          <Route
-            path="/upload-music" element={<UploadMusicPage />}
-          />
+          <Route path="/new-artist" element={<AddArtistForm />} />
+
+          <Route path="/upload-music" element={<UploadMusicPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
           <Route
             path="/subscriptions"
