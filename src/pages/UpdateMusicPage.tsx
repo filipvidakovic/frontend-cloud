@@ -64,6 +64,7 @@ const UpdateMusicPage: React.FC = () => {
 
     try {
       if (!file) throw new Error("Please select a new audio file");
+      if (!musicId) throw new Error("Music ID is missing from URL");
 
       const fileContent = await toBase64(file);
       const coverImage = cover ? await toBase64(cover) : null;
@@ -74,7 +75,7 @@ const UpdateMusicPage: React.FC = () => {
         coverImage,
         musicId,
       };
-
+      
       const result = await MusicService.updateMusic(payload);
       setMessage(result.message || "Music updated successfully");
     } catch (err: any) {

@@ -6,6 +6,7 @@ import AuthService from "./services/AuthService";
 import { useState } from "react";
 import DiscoverPage from "./pages/DiscoverPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
+import UpdateMusicPage from "./pages/UpdateMusicPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -49,6 +50,9 @@ function App() {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link className="nav-link" to="/update-music/pop/6189d1a0-089e-4599-8d87-e35cca720233">Update Music</Link>
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/discover">
                   Discover
                 </Link>
@@ -84,6 +88,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/update-music/:genre/:musicId" element={<UpdateMusicPage />} />
           <Route
             path="*"
             element={<h2 className="text-center">Page Not Found</h2>}
