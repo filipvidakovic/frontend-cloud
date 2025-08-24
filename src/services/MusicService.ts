@@ -5,17 +5,24 @@ const API_URL = import.meta.env.VITE_API_URL;
 export interface UploadMusicData {
   title: string;
   fileName: string;
-  fileContent: string; // base64 string
   genres: string[];
   artistIds: string[];
   albumId?: string | null;
-  coverImage?: string | null; // base64 string (optional)
+  coverImage?: string | null; 
+  fileContent: string;
+}
+
+export interface UpdateMusicData {
+  musicId: string;
+  title: string | null;
+  fileName: string | null;
+  fileContent: string | null;
+  coverImage: string | null;
 }
 
 class MusicService {
   async uploadMusic(data: UploadMusicData) {
     try {
-        console.log("Request URL:", `${API_URL}/music`);
       const token = localStorage.getItem("token");
       const response = await axios.post(`${API_URL}/music`, data, {
         headers: {
@@ -44,6 +51,21 @@ class MusicService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Failed to fetch music details");
+    }
+  }
+
+  async updateMusic(data: UpdateMusicData) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.put(`${API_URL}/music`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || "Update failed");
     }
   }
 }

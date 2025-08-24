@@ -1,0 +1,21 @@
+.upload-page {
+  padding: 2rem;
+}
+
+.upload-page h1,
+.upload-page p {
+  text-align: center;
+}
+
+.upload-page .form-label {
+  font-weight: 600;
+}
+
+.upload-page .btn {
+  font-weight: 500;
+}
+
+.alert {
+  max-width: 600px;
+  margin: 1rem auto 0 auto;
+}
