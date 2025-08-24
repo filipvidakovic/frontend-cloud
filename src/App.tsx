@@ -6,6 +6,7 @@ import AuthService from "./services/AuthService";
 import { useState } from "react";
 import DiscoverPage from "./pages/DiscoverPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
+import AddArtistForm from "./components/artist/AddArtistForm";
 import UpdateMusicPage from "./pages/UpdateMusicPage";
 
 function App() {
@@ -50,7 +51,9 @@ function App() {
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/update-music/">Update Music</Link>
+                <Link className="nav-link" to="/update-music/">
+                  Update Music
+                </Link>
               </li>
               <li className="nav-item">
                 <Link className="nav-link" to="/discover">
@@ -88,14 +91,17 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/update-music/:genre/:musicId" element={<UpdateMusicPage />} />
+          <Route
+            path="/update-music/:genre/:musicId"
+            element={<UpdateMusicPage />}
+          />
           <Route
             path="*"
             element={<h2 className="text-center">Page Not Found</h2>}
           />
-          <Route
-            path="/upload-music" element={<UploadMusicPage />}
-          />
+          <Route path="/new-artist" element={<AddArtistForm />} />
+
+          <Route path="/upload-music" element={<UploadMusicPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
           <Route
             path="/subscriptions"
