@@ -1,21 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import MusicService, { type UpdateMusicData } from "../services/MusicService";
+import MusicService from "../services/MusicService";
 import "./UpdateMusicPage.css";
 
 const UpdateMusicPage: React.FC = () => {
   const { genre, musicId } = useParams();
-  const [formData, setFormData] = useState<UpdateMusicData>({
-    musicId: "", 
-    title: "",
-    fileName: "",
-    fileContent: "",
-    genres: [],
-    artistIds: [],
-    albumId: null,
-    coverImage: null,
-  });
 
+  const [title, setTitle] = useState("");
+  const [originalTitle, setOriginalTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,28 +27,12 @@ const UpdateMusicPage: React.FC = () => {
 
     MusicService.getMusicDetails(genre, musicId)
       .then((data) => {
-        setFormData({
-          musicId: musicId,
-          title: data.title,
-          fileName: data.fileName,
-          fileContent: "", // must be re-uploaded
-          genres: data.genres || [data.genre], // fallback if genres not available
-          artistIds: data.artistIds || [],
-          albumId: data.albumId || null,
-          coverImage: null,
-        });
+        setTitle(data.title);
+        setOriginalTitle(data.title);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [genre, musicId]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,18 +41,29 @@ const UpdateMusicPage: React.FC = () => {
     setLoading(true);
 
     try {
-      if (!musicId) throw new Error("Music ID is missing from URL");
+      if (!musicId) throw new Error("Missing music ID");
 
-      const fileContent = file ? await toBase64(file) : undefined;
-      const coverImage = cover ? await toBase64(cover) : undefined;
+      const fileChanged = !!file;
+      const coverChanged = !!cover;
+      const titleChanged = title !== originalTitle;
+
+      if (!fileChanged && !coverChanged && !titleChanged) {
+        setError("No changes detected.");
+        setLoading(false);
+        return;
+      }
+
+      const fileContent = file ? await toBase64(file) : null;
+      const coverImage = cover ? await toBase64(cover) : null;
 
       const payload = {
-        ...formData,
         musicId,
-        ...(fileContent && { fileContent }),
-        ...(coverImage !== undefined && { coverImage }), // even if it's null, send it
+        title: titleChanged ? title : null,
+        fileName: file ? file.name : null,
+        fileContent: fileContent,
+        coverImage: coverImage,
       };
-      
+
       const result = await MusicService.updateMusic(payload);
       setMessage(result.message || "Music updated successfully");
     } catch (err: any) {
@@ -98,9 +85,8 @@ const UpdateMusicPage: React.FC = () => {
             <label className="form-label">Title</label>
             <input
               className="form-control"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
             />
           </div>
@@ -122,37 +108,6 @@ const UpdateMusicPage: React.FC = () => {
               accept="image/*"
               className="form-control"
               onChange={(e) => setCover(e.target.files?.[0] || null)}
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Genres (comma separated)</label>
-            <input
-              className="form-control"
-              name="genres"
-              value={formData.genres.join(", ")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  genres: e.target.value.split(",").map((g) => g.trim()),
-                }))
-              }
-              required
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Album ID (optional)</label>
-            <input
-              className="form-control"
-              name="albumId"
-              value={formData.albumId || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  albumId: e.target.value || null,
-                }))
-              }
             />
           </div>
 

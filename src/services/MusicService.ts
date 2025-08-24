@@ -2,25 +2,22 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Base interface for shared music fields
-interface BaseMusicData {
+export interface UploadMusicData {
   title: string;
   fileName: string;
   genres: string[];
   artistIds: string[];
   albumId?: string | null;
-  coverImage?: string | null; // optional for both
+  coverImage?: string | null; 
+  fileContent: string;
 }
 
-// Upload requires fileContent
-export interface UploadMusicData extends BaseMusicData {
-  fileContent: string; // ✅ required
-}
-
-// Update allows optional fileContent
-export interface UpdateMusicData extends BaseMusicData {
+export interface UpdateMusicData {
   musicId: string;
-  fileContent?: string; // ✅ optional
+  title: string | null;
+  fileName: string | null;
+  fileContent: string | null;
+  coverImage: string | null;
 }
 
 class MusicService {
