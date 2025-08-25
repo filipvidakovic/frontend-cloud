@@ -3,7 +3,8 @@ import AlbumList from "../components/album/AlbumList";
 import ArtistList from "../components/artist/ArtistList";
 import type { AlbumCardProps } from "../models/Album";
 import type { ArtistCardProps } from "../models/Artist";
-import { discoverAlbums, discoverArtists } from "../ApiService";
+import MusicService from "../services/MusicService";
+import ArtistService from "../services/ArtistService";
 import "./DiscoverPage.css";
 
 const DiscoverPage: React.FC = () => {
@@ -18,8 +19,8 @@ const DiscoverPage: React.FC = () => {
     setError(null); // reset previous errors
     try {
       const [albumsRes, artistsRes] = await Promise.all([
-        discoverAlbums(genre),
-        discoverArtists(genre),
+        MusicService.getAlbumsByGenre(genre),
+        ArtistService.getArtistsByGenre(genre),
       ]);
 
       setAlbums(albumsRes); // backend returns AlbumCardProps[]
