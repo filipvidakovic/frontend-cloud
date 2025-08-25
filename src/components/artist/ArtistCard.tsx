@@ -1,29 +1,37 @@
 import React from "react";
 import type { ArtistCardProps } from "../../models/Artist";
+import "./ArtistCard.css"; // import CSS file
 
-const ArtistCard: React.FC<ArtistCardProps> = ({ artistId, genres }) => {
+const ArtistCard: React.FC<ArtistCardProps> = ({
+  name,
+  lastname,
+  bio,
+  genres,
+}) => {
+  const truncatedBio =
+    bio && bio.length > 100 ? bio.substring(0, 100) + "..." : bio;
+
   return (
-    <div
-      className="card mb-3 shadow-sm border-0 rounded-4"
-      style={{ maxWidth: "300px", height: "200px" }}
-    >
-      <div className="card-body d-flex flex-column justify-content-between h-100">
-        {/* Artist ID */}
-        <h5 className="card-title fw-bold">{artistId}</h5>
+    <div className="card artist-card h-100">
+      <div className="card-body d-flex flex-column justify-content-between p-4">
+        {/* Artist name */}
+        <h5 className="card-title artist-name mb-2">
+          {name} {lastname}
+        </h5>
+
+        {/* Bio preview */}
+        {bio && <p className="card-text artist-bio mb-3">{truncatedBio}</p>}
 
         {/* Genres */}
-        <div className="mb-2">
-          {genres.map((genre, idx) => (
-            <span key={idx} className="badge bg-secondary me-1">
-              {genre}
-            </span>
-          ))}
-        </div>
-
-        {/* Optional footer */}
-        <p className="card-text text-end">
-          <small className="text-muted">{genres.length} genres</small>
-        </p>
+        {genres?.length > 0 && (
+          <div className="d-flex flex-wrap gap-2 mt-auto">
+            {genres.map((genre, idx) => (
+              <span key={idx} className="badge genre-badge">
+                {genre}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
