@@ -1,0 +1,34 @@
+.artist-card {
+  max-width: 320px;
+  border-radius: 1rem; /* rounded-4 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: none;
+}
+
+.artist-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+.artist-name {
+  font-weight: 700;
+  color: #000; /* bootstrap primary blue */
+  letter-spacing: 0.3px;
+}
+
+.artist-bio {
+  font-size: 0.9rem;
+  color: #6c757d; /* muted gray */
+  line-height: 1.5;
+}
+
+.genre-badge {
+  background-color: #e7f1ff; /* soft light blue */
+  color: #0d6efd; /* strong blue text */
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  border-radius: 50rem; /* pill */
+  border: 1px solid #cfe2ff; /* subtle blue border */
+}
