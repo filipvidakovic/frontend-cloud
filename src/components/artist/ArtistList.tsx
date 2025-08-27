@@ -7,12 +7,16 @@ export interface ArtistListProps {
 }
 
 const ArtistList: React.FC<ArtistListProps> = ({ artists }) => {
+  if (artists.length === 0) {
+    return <p className="text-muted">No artists found.</p>;
+  }
+
   return (
     <div className="container">
       <div className="row">
         {artists.map((artist) => (
           <div key={artist.artistId} className="col-md-4 mb-4">
-            <ArtistCard artistId={artist.artistId} genres={artist.genres} />
+            <ArtistCard {...artist} />
           </div>
         ))}
       </div>

@@ -12,6 +12,7 @@ const AlbumList: React.FC<AlbumListProps> = ({ albums }) => {
               albumId={album.albumId}
               genre={album.genre}
               titleList={album.titleList}
+              coverUrl={album.coverUrl}
             />
           </div>
         ))}

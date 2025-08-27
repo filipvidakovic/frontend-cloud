@@ -8,7 +8,7 @@ export interface UploadMusicData {
   genres: string[];
   artistIds: string[];
   albumId?: string | null;
-  coverImage?: string | null; 
+  coverImage?: string | null;
   fileContent: string;
 }
 
@@ -50,7 +50,9 @@ class MusicService {
       });
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || "Failed to fetch music details");
+      throw new Error(
+        error.response?.data?.error || "Failed to fetch music details"
+      );
     }
   }
 
@@ -66,6 +68,24 @@ class MusicService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Update failed");
+    }
+  }
+  async getAlbumsByGenre(genre: string) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_URL}/music/albums`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        params: { genre },
+      });
+
+      console.log("📀 getAlbumsByGenre response:", response.data);
+      return response.data.albums || [];
+    } catch (error: any) {
+      console.error("❌ Error fetching albums:", error);
+      throw new Error(error.response?.data?.error || "Failed to fetch albums");
     }
   }
 }
