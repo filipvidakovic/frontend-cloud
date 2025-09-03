@@ -1,4 +1,5 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 export interface LoginData {
   username: string;
@@ -20,7 +21,10 @@ class AuthService {
   async login(data: LoginData) {
     try {
       const response = await axios.post(`${API_URL}/login`, data);
-      localStorage.setItem("token", response.data.AccessToken);
+      localStorage.setItem("token", response.data.IdToken);
+      const claims: any = jwtDecode(response.data.IdToken);
+      localStorage.setItem("username", claims.username!);
+      localStorage.setItem("userId", claims.sub!);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Login failed");
@@ -46,6 +50,24 @@ class AuthService {
 
   isAuthenticated() {
     return !!this.getToken();
+  }
+
+  async getUserInfo() {
+    const username = localStorage.getItem("username");
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.get(`${API_URL}/users/${username}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      console.log(response.data)
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to fetch user info");
+    }
   }
 }
 

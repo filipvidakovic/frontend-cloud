@@ -32,3 +32,7 @@
   border-radius: 50rem; /* pill */
   border: 1px solid #cfe2ff; /* subtle blue border */
 }
+
+span {
+  cursor: pointer;
+}
