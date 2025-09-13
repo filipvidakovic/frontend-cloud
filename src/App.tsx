@@ -8,6 +8,7 @@ import DiscoverPage from "./pages/DiscoverPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
 import AddArtistForm from "./components/artist/AddArtistForm";
 import UpdateMusicPage from "./pages/UpdateMusicPage";
+import AlbumPage from "./pages/AlbumPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -95,6 +96,7 @@ function App() {
             path="/update-music/:genre/:musicId"
             element={<UpdateMusicPage />}
           />
+          <Route path="/albums/:albumId" element={<AlbumPage />} />
           <Route
             path="*"
             element={<h2 className="text-center">Page Not Found</h2>}

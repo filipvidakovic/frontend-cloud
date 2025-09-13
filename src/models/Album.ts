@@ -3,7 +3,9 @@ export interface AlbumCardProps {
   genre: string;
   titleList: string[];
   coverUrl: string;
+  musicIds: string[];  
 }
 export interface AlbumListProps {
   albums: AlbumCardProps[];
+  genre: string;     
 }
