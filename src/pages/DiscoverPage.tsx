@@ -10,9 +10,8 @@ import "./DiscoverPage.css";
 
 const DiscoverPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navType = useNavigationType(); // 'POP' when using browser back/forward
+  const navType = useNavigationType();
 
-  // seed input from URL (?genre=...)
   const urlGenre = searchParams.get("genre") || "";
   const [genre, setGenre] = useState(urlGenre);
 
@@ -21,12 +20,9 @@ const DiscoverPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // cache key per-genre
   const cacheKey = useMemo(() => `discover:genre=${urlGenre}`, [urlGenre]);
 
-  // Initial load + back/forward handling
   useEffect(() => {
-    // If we navigated here via Back/Forward (POP), try cache first and skip fetch
     const cachedRaw = sessionStorage.getItem(cacheKey);
     if (navType === "POP" && cachedRaw) {
       try {
@@ -35,7 +31,6 @@ const DiscoverPage: React.FC = () => {
         setArtists(cached.artists || []);
         setError(null);
         setLoading(false);
-        // also sync the input box with the URL
         setGenre(urlGenre);
         return;
       } catch {
@@ -43,7 +38,6 @@ const DiscoverPage: React.FC = () => {
       }
     }
 
-    // If there's a genre in the URL and we didn't come via POP (or no cache), fetch
     if (urlGenre) {
       let cancel = false;
       (async () => {
@@ -61,7 +55,6 @@ const DiscoverPage: React.FC = () => {
             cacheKey,
             JSON.stringify({ albums: albumsRes, artists: artistsRes })
           );
-          // keep input in sync
           setGenre(urlGenre);
         } catch (err: any) {
           if (cancel) return;
@@ -83,10 +76,8 @@ const DiscoverPage: React.FC = () => {
     }
   }, [urlGenre, cacheKey, navType]);
 
-  // Trigger a new search: write to URL AND fetch + cache
   const handleSearch = async () => {
     const g = genre.trim();
-    // push the query to the URL (creates a history entry so Back works)
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
       if (g) p.set("genre", g);
