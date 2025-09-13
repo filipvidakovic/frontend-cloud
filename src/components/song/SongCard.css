@@ -1,0 +1,118 @@
+/* container: centered with a nice max width */
+.song-card {
+  width: 100%;
+  max-width: 720px;         /* 👈 max width */
+  margin: 0 auto 14px;      /* center + spacing */
+  display: grid;
+  grid-template-columns: 72px 1fr auto; /* cover | content | play */
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  transition: box-shadow .15s ease, transform .08s ease;
+}
+
+.song-card:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  transform: translateY(-1px);
+}
+
+.song-card.playing {
+  border-color: #d0ebff;
+  box-shadow: 0 0 0 3px rgba(30,144,255,.08);
+}
+
+/* cover */
+.song-card-cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f8f9fa;
+  border: 1px solid #f1f3f5;
+}
+
+/* content */
+.song-card-content {
+  min-width: 0; /* enable ellipsis */
+}
+
+.song-card-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.song-card-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.92rem;
+  color: #6b7280;
+}
+
+.song-card-artists {
+  color: #374151;
+  font-weight: 500;
+}
+
+.song-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  font-size: 0.75rem;
+}
+
+.song-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* play button */
+.song-card-play-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, transform .05s ease, border-color .15s ease;
+}
+
+.song-card-play-btn:hover {
+  background: #f9fafb;
+}
+
+.song-card-play-btn:active {
+  transform: scale(0.98);
+}
+
+.song-card-play-btn.pause {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+/* responsive tweaks */
+@media (max-width: 576px) {
+  .song-card {
+    grid-template-columns: 56px 1fr auto;
+    padding: 10px 12px;
+  }
+  .song-card-cover {
+    width: 56px;
+    height: 56px;
+  }
+}
