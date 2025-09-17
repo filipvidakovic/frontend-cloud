@@ -38,16 +38,17 @@ const DiscoverPage: React.FC = () => {
         // fall through to fetch
       }
     }
-
+    console.log("Use effect running, urlGenre:", urlGenre);
     if (urlGenre) {
       let cancel = false;
       (async () => {
         setLoading(true);
         setError(null);
         try {
+          console.log("Fetching albums and artists...");
           const [albumsRes, artistsRes] = await Promise.all([
-            MusicService.getAlbumsByGenre(urlGenre),
-            ArtistService.getArtistsByGenre(urlGenre),
+            await MusicService.getAlbumsByGenre(urlGenre),
+            await ArtistService.getArtistsByGenre(urlGenre),
           ]);
           if (cancel) return;
           setAlbums(albumsRes);
@@ -118,7 +119,7 @@ const DiscoverPage: React.FC = () => {
     try {
       await SubscribeService.subscribe({
         type: "genre",
-        id: `genre#${genre.trim()}`,
+        id: `${genre.trim()}`,
       });
     } catch (err) {
       console.error("Error subscribing to genre:", err);
@@ -164,17 +165,17 @@ const DiscoverPage: React.FC = () => {
 
       {error && <p className="text-danger text-center">{error}</p>}
 
-      {albums.length > 0 && (
+      {!loading && albums.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Albums</h2>
-          <AlbumList albums={albums} genre={genre} />
+          {albums &&<AlbumList albums={albums} genre={genre} />}
         </div>
       )}
 
-      {artists.length > 0 && (
+      {!loading && artists.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Artists</h2>
-          <ArtistList artists={artists} />
+          {artists && <ArtistList artists={artists} />}
         </div>
       )}
 

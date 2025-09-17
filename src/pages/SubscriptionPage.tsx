@@ -107,7 +107,7 @@ const SubscriptionsPage: React.FC = () => {
                 <p className="text-red-500">Artist data not found</p>
               )}
               <button
-                className="mt-2 bg-red-500 text-white px-3 py-1 rounded-lg"
+                className="mt-2 bg-red-500  px-3 py-1 rounded-lg"
                 onClick={() => handleUnsubscribe(sub.subscriptionId)}
               >
                 Unsubscribe
@@ -130,7 +130,7 @@ const SubscriptionsPage: React.FC = () => {
               Subscribed on {new Date(sub.createdAt).toLocaleDateString()}
             </p>
             <button
-              className="mt-2 bg-red-500 text-white px-3 py-1 rounded-lg"
+              className="mt-2 bg-red-500 px-3 py-1 rounded-lg"
               onClick={() => handleUnsubscribe(sub.subscriptionId)}
             >
               Unsubscribe

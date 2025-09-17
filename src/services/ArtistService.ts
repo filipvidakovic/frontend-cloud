@@ -33,9 +33,6 @@ class ArtistService {
   async getArtistsByGenre(genre: string): Promise<ArtistCardProps[]> {
     try {
       const token = localStorage.getItem("token");
-
-      console.log(`🔍 Fetching artists by genre: ${genre}`);
-
       const response = await axios.get(`${API_URL}/artists`, {
         params: { genre },
         headers: {
