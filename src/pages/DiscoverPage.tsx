@@ -5,6 +5,7 @@ import type { AlbumCardProps } from "../models/Album";
 import type { ArtistCardProps } from "../models/Artist";
 import MusicService from "../services/MusicService";
 import ArtistService from "../services/ArtistService";
+import SubscribeService from "../services/SubscribeService";
 import "./DiscoverPage.css";
 
 const DiscoverPage: React.FC = () => {
@@ -33,6 +34,17 @@ const DiscoverPage: React.FC = () => {
     }
   };
 
+  const handleSubscribeToGenre = async () => {
+    try {
+      await SubscribeService.subscribe({
+        type: "genre",
+        id: `genre#${genre.trim()}`,
+      });
+    } catch (err) {
+      console.error("Error subscribing to genre:", err);
+    }
+  }
+
   return (
     <div className="discover-page container mt-5">
       <h1 className="display-4 mb-3 text-center">Discover</h1>
@@ -54,6 +66,13 @@ const DiscoverPage: React.FC = () => {
           disabled={loading || !genre.trim()}
         >
           {loading ? "Searching..." : "Search"}
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={handleSubscribeToGenre}
+          disabled={loading || !genre.trim()}
+        >
+          {loading ? "Searching..." : "Subscribe to genre"}
         </button>
       </div>
 

@@ -1,7 +1,7 @@
 import React from "react";
 import type { ArtistCardProps } from "../../models/Artist";
 import "./ArtistCard.css"; // import CSS file
-import { subscribeToArtist } from "../../services/SubscribeService";
+import SubscribeService from "../../services/SubscribeService";
 
 const ArtistCard: React.FC<ArtistCardProps> = ({
   artistId,
@@ -20,7 +20,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({
       action: "subscribe",
       userId: undefined
     }
-    subscribeToArtist(data);
+    SubscribeService.subscribe(data);
   }
 
   return (

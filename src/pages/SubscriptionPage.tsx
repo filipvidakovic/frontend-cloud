@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getUserSubscriptions, unsubscribeFromArtist } from "../services/SubscribeService";
-// import AuthService from "../services/AuthService";
+import SubscribeService from "../services/SubscribeService";
 import ArtistService from "../services/ArtistService";
 import type { ArtistCardProps } from "../models/Artist";
 
@@ -11,39 +10,38 @@ export interface Subscription {
   targetId: string;
 }
 
-interface Artist {
-  artistId: string;
-  name: string;
-  lastname: string;
-  age: number;
-  bio: string;
-  genres: string[];
-}
-
-interface User {
-  userId: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  birthdate: string;
-}
-
 const SubscriptionsPage: React.FC = () => {
-  const [subscriptions, setSubscriptions] = useState<(Subscription & { details?: Artist | User })[]>([]);
-  const [artists, setArtists] = useState<{ [key: string]: ArtistCardProps } | null>(null);
+  const [artistSubs, setArtistSubs] = useState<Subscription[]>([]);
+  const [genreSubs, setGenreSubs] = useState<Subscription[]>([]);
+  const [artists, setArtists] = useState<Record<string, ArtistCardProps>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const subs: Subscription[] = await getUserSubscriptions();
-        subs.forEach(async (sub) => {
-          const artist: ArtistCardProps = await ArtistService.getArtistById(sub.targetId);
-          setArtists((prev) => ({ ...prev, [sub.targetId]: artist }));
-        });
-        setSubscriptions(subs);
+        const { artistSubscriptions, genreSubscriptions } =
+          await SubscribeService.getUserSubscriptions();
+
+        // Fetch artist details for each artist subscription
+        const artistsData = await Promise.all(
+          artistSubscriptions.map(async (sub) => {
+            const artist: ArtistCardProps = await ArtistService.getArtistById(
+              sub.targetId
+            );
+            return { id: sub.targetId, artist };
+          })
+        );
+
+        const artistMap = artistsData.reduce(
+          (acc, { id, artist }) => ({ ...acc, [id]: artist }),
+          {} as Record<string, ArtistCardProps>
+        );
+
+        setArtists(artistMap);
+        setArtistSubs(artistSubscriptions);
+        setGenreSubs(genreSubscriptions);
+        console.log(artistSubscriptions, genreSubscriptions);
       } catch (err) {
         console.error("Error fetching subscriptions:", err);
         setError("Failed to load subscriptions");
@@ -55,6 +53,20 @@ const SubscriptionsPage: React.FC = () => {
     fetchSubscriptions();
   }, []);
 
+  async function handleUnsubscribe(subscriptionId: string): Promise<void> {
+    try {
+      await SubscribeService.unsubscribe(subscriptionId);
+      setArtistSubs((prev) =>
+        prev.filter((s) => s.subscriptionId !== subscriptionId)
+      );
+      setGenreSubs((prev) =>
+        prev.filter((s) => s.subscriptionId !== subscriptionId)
+      );
+    } catch (err) {
+      console.error("Failed to unsubscribe:", err);
+    }
+  }
+
   if (loading) {
     return <div>Loading subscriptions...</div>;
   }
@@ -63,43 +75,60 @@ const SubscriptionsPage: React.FC = () => {
     return <div>{error}</div>;
   }
 
-  if (subscriptions.length === 0) {
+  if (artistSubs.length === 0 && genreSubs.length === 0) {
     return <div>No subscriptions found.</div>;
   }
 
-  async function handleUnsubscribe(subscriptionId: string): Promise<void> {
-    try {
-      await unsubscribeFromArtist(subscriptionId);
-      setSubscriptions((prev) => prev.filter((s) => s.subscriptionId !== subscriptionId));
-    } catch (err) {
-      console.error("Failed to unsubscribe:", err);
-    }
-  }
-
-    return (
+  return (
     <div className="p-4">
+      {/* Artist Subscriptions */}
       <h2 className="text-xl font-bold mb-4">Your Artist Subscriptions</h2>
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {subscriptions.map((sub) => (
+        {artistSubs.map((sub) => {
+          const artist = artists[sub.targetId];
+          return (
+            <div
+              key={sub.subscriptionId}
+              className="rounded-xl shadow-lg border p-4 bg-white"
+            >
+              {artist ? (
+                <>
+                  <h3 className="text-lg font-semibold">
+                    {artist.name} {artist.lastname}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Subscribed on{" "}
+                    {new Date(sub.createdAt).toLocaleDateString()}
+                  </p>
+                  <p>Genres: {artist.genres?.join(", ")}</p>
+                  <p className="text-gray-700">{artist.bio}</p>
+                </>
+              ) : (
+                <p className="text-red-500">Artist data not found</p>
+              )}
+              <button
+                className="mt-2 bg-red-500 text-white px-3 py-1 rounded-lg"
+                onClick={() => handleUnsubscribe(sub.subscriptionId)}
+              >
+                Unsubscribe
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Genre Subscriptions */}
+      <h2 className="text-xl font-bold mt-8 mb-4">Your Genre Subscriptions</h2>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {genreSubs.map((sub) => (
           <div
             key={sub.subscriptionId}
             className="rounded-xl shadow-lg border p-4 bg-white"
           >
-            {sub.targetId ? (
-              <>
-                <h3 className="text-lg font-semibold">
-                  {artists?.artistId.name} {artists?.artistId.lastname}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Subscribed on {new Date(sub.createdAt).toLocaleDateString()}
-                </p>
-                <p>Genres: {artists?.artistId.genres.join(", ")}</p>
-                <p className="text-gray-700">{artists?.artistId.bio}</p>
-              </>
-            ) : (
-              <p className="text-red-500">Artist data not found</p>
-            )}
-
+            <h3 className="text-lg font-semibold">{sub.targetId}</h3>
+            <p className="text-sm text-gray-600">
+              Subscribed on {new Date(sub.createdAt).toLocaleDateString()}
+            </p>
             <button
               className="mt-2 bg-red-500 text-white px-3 py-1 rounded-lg"
               onClick={() => handleUnsubscribe(sub.subscriptionId)}
