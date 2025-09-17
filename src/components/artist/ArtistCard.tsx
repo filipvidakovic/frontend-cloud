@@ -1,8 +1,10 @@
 import React from "react";
 import type { ArtistCardProps } from "../../models/Artist";
 import "./ArtistCard.css"; // import CSS file
+import SubscribeService from "../../services/SubscribeService";
 
 const ArtistCard: React.FC<ArtistCardProps> = ({
+  artistId,
   name,
   lastname,
   bio,
@@ -10,6 +12,16 @@ const ArtistCard: React.FC<ArtistCardProps> = ({
 }) => {
   const truncatedBio =
     bio && bio.length > 100 ? bio.substring(0, 100) + "..." : bio;
+
+  function subscribe(artistId: string): void {
+    let data = {
+      type: "artist",
+      id: artistId,
+      action: "subscribe",
+      userId: undefined
+    }
+    SubscribeService.subscribe(data);
+  }
 
   return (
     <div className="card artist-card h-100">
@@ -21,6 +33,10 @@ const ArtistCard: React.FC<ArtistCardProps> = ({
 
         {/* Bio preview */}
         {bio && <p className="card-text artist-bio mb-3">{truncatedBio}</p>}
+
+        <button className="btn btn-sm btn-outline-primary mb-3" onClick={() => subscribe(artistId)}>
+          Subscribe
+        </button>
 
         {/* Genres */}
         {genres?.length > 0 && (

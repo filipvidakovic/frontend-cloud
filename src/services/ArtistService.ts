@@ -33,9 +33,6 @@ class ArtistService {
   async getArtistsByGenre(genre: string): Promise<ArtistCardProps[]> {
     try {
       const token = localStorage.getItem("token");
-
-      console.log(`🔍 Fetching artists by genre: ${genre}`);
-
       const response = await axios.get(`${API_URL}/artists`, {
         params: { genre },
         headers: {
@@ -47,6 +44,24 @@ class ArtistService {
       console.log("✅ Artists fetch response:", response.data);
 
       // ✅ Return only the array of artists
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Error fetching artists:", error);
+      throw new Error(error.response?.data?.error || "Failed to fetch artists");
+    }
+  }
+
+  async getArtistById(artistId: string): Promise<ArtistCardProps > {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(`${API_URL}/artists/${artistId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
       return response.data;
     } catch (error: any) {
       console.error("❌ Error fetching artists:", error);

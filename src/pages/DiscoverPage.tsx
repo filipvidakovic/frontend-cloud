@@ -5,6 +5,7 @@ import type { AlbumCardProps } from "../models/Album";
 import type { ArtistCardProps } from "../models/Artist";
 import MusicService from "../services/MusicService";
 import ArtistService from "../services/ArtistService";
+import SubscribeService from "../services/SubscribeService";
 import { useSearchParams, useNavigationType } from "react-router-dom";
 import "./DiscoverPage.css";
 
@@ -37,16 +38,17 @@ const DiscoverPage: React.FC = () => {
         // fall through to fetch
       }
     }
-
+    console.log("Use effect running, urlGenre:", urlGenre);
     if (urlGenre) {
       let cancel = false;
       (async () => {
         setLoading(true);
         setError(null);
         try {
+          console.log("Fetching albums and artists...");
           const [albumsRes, artistsRes] = await Promise.all([
-            MusicService.getAlbumsByGenre(urlGenre),
-            ArtistService.getArtistsByGenre(urlGenre),
+            await MusicService.getAlbumsByGenre(urlGenre),
+            await ArtistService.getArtistsByGenre(urlGenre),
           ]);
           if (cancel) return;
           setAlbums(albumsRes);
@@ -113,6 +115,16 @@ const DiscoverPage: React.FC = () => {
     }
   };
 
+  const handleSubscribeToGenre = async () => {
+    try {
+      await SubscribeService.subscribe({
+        type: "genre",
+        id: `${genre.trim()}`,
+      });
+    } catch (err) {
+      console.error("Error subscribing to genre:", err);
+    }
+  }
   const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter" && genre.trim() && !loading) {
       handleSearch();
@@ -142,21 +154,28 @@ const DiscoverPage: React.FC = () => {
         >
           {loading ? "Searching..." : "Search"}
         </button>
+        <button
+          className="btn btn-primary"
+          onClick={handleSubscribeToGenre}
+          disabled={loading || !genre.trim()}
+        >
+          {loading ? "Searching..." : "Subscribe to genre"}
+        </button>
       </div>
 
       {error && <p className="text-danger text-center">{error}</p>}
 
-      {albums.length > 0 && (
+      {!loading && albums.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Albums</h2>
-          <AlbumList albums={albums} genre={genre} />
+          {albums &&<AlbumList albums={albums} genre={genre} />}
         </div>
       )}
 
-      {artists.length > 0 && (
+      {!loading && artists.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Artists</h2>
-          <ArtistList artists={artists} />
+          {artists && <ArtistList artists={artists} />}
         </div>
       )}
 

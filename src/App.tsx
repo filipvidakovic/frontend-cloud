@@ -8,6 +8,7 @@ import DiscoverPage from "./pages/DiscoverPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
 import AddArtistForm from "./components/artist/AddArtistForm";
 import UpdateMusicPage from "./pages/UpdateMusicPage";
+import SubscriptionsPage from "./pages/SubscriptionPage";
 import AlbumPage from "./pages/AlbumPage";
 
 function App() {
@@ -107,7 +108,7 @@ function App() {
           <Route path="/discover" element={<DiscoverPage />} />
           <Route
             path="/subscriptions"
-            element={<h2 className="text-center">Subscriptions Page</h2>}
+            element={<SubscriptionsPage />}
           />
         </Routes>
       </div>
