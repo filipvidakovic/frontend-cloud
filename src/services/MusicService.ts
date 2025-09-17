@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { Song } from "../models/Song";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -88,6 +89,26 @@ class MusicService {
       throw new Error(error.response?.data?.error || "Failed to fetch albums");
     }
   }
+  async batchGetByGenre(genre: string, musicIds: string[]) {
+    if (!genre) throw new Error("genre is required");
+    if (!Array.isArray(musicIds) || musicIds.length === 0) {
+      return []; // nothing to fetch
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/music/batchGetByGenre`,
+        { genre, musicIds },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data as Song[];
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.error || "Failed to batch fetch songs"
+      );
+    }
+  }
+
 }
 
 export default new MusicService();

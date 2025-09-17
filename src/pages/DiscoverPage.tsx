@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AlbumList from "../components/album/AlbumList";
 import ArtistList from "../components/artist/ArtistList";
 import type { AlbumCardProps } from "../models/Album";
@@ -6,26 +6,106 @@ import type { ArtistCardProps } from "../models/Artist";
 import MusicService from "../services/MusicService";
 import ArtistService from "../services/ArtistService";
 import SubscribeService from "../services/SubscribeService";
+import { useSearchParams, useNavigationType } from "react-router-dom";
 import "./DiscoverPage.css";
 
 const DiscoverPage: React.FC = () => {
-  const [genre, setGenre] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navType = useNavigationType();
+
+  const urlGenre = searchParams.get("genre") || "";
+  const [genre, setGenre] = useState(urlGenre);
+
   const [albums, setAlbums] = useState<AlbumCardProps[]>([]);
   const [artists, setArtists] = useState<ArtistCardProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const cacheKey = useMemo(() => `discover:genre=${urlGenre}`, [urlGenre]);
+
+  useEffect(() => {
+    const cachedRaw = sessionStorage.getItem(cacheKey);
+    if (navType === "POP" && cachedRaw) {
+      try {
+        const cached = JSON.parse(cachedRaw);
+        setAlbums(cached.albums || []);
+        setArtists(cached.artists || []);
+        setError(null);
+        setLoading(false);
+        setGenre(urlGenre);
+        return;
+      } catch {
+        // fall through to fetch
+      }
+    }
+
+    if (urlGenre) {
+      let cancel = false;
+      (async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const [albumsRes, artistsRes] = await Promise.all([
+            MusicService.getAlbumsByGenre(urlGenre),
+            ArtistService.getArtistsByGenre(urlGenre),
+          ]);
+          if (cancel) return;
+          setAlbums(albumsRes);
+          setArtists(artistsRes);
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({ albums: albumsRes, artists: artistsRes })
+          );
+          setGenre(urlGenre);
+        } catch (err: any) {
+          if (cancel) return;
+          console.error("Error fetching data:", err);
+          setError("Failed to fetch albums or artists. Please try again.");
+        } finally {
+          if (!cancel) setLoading(false);
+        }
+      })();
+      return () => {
+        cancel = true;
+      };
+    } else {
+      // no genre in URL: clear lists (first visit)
+      setAlbums([]);
+      setArtists([]);
+      setLoading(false);
+      setError(null);
+    }
+  }, [urlGenre, cacheKey, navType]);
+
   const handleSearch = async () => {
+    const g = genre.trim();
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      if (g) p.set("genre", g);
+      else p.delete("genre");
+      return p;
+    });
+
+    if (!g) {
+      setAlbums([]);
+      setArtists([]);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
-    setError(null); // reset previous errors
+    setError(null);
     try {
       const [albumsRes, artistsRes] = await Promise.all([
-        MusicService.getAlbumsByGenre(genre),
-        ArtistService.getArtistsByGenre(genre),
+        MusicService.getAlbumsByGenre(g),
+        ArtistService.getArtistsByGenre(g),
       ]);
-
-      setAlbums(albumsRes); // backend returns AlbumCardProps[]
-      setArtists(artistsRes); // backend returns ArtistCardProps[]
+      setAlbums(albumsRes);
+      setArtists(artistsRes);
+      sessionStorage.setItem(
+        `discover:genre=${g}`,
+        JSON.stringify({ albums: albumsRes, artists: artistsRes })
+      );
     } catch (err) {
       console.error("Error fetching data:", err);
       setError("Failed to fetch albums or artists. Please try again.");
@@ -44,6 +124,11 @@ const DiscoverPage: React.FC = () => {
       console.error("Error subscribing to genre:", err);
     }
   }
+  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "Enter" && genre.trim() && !loading) {
+      handleSearch();
+    }
+  };
 
   return (
     <div className="discover-page container mt-5">
@@ -59,6 +144,7 @@ const DiscoverPage: React.FC = () => {
           placeholder="Enter genre..."
           value={genre}
           onChange={(e) => setGenre(e.target.value)}
+          onKeyDown={onKeyDown}
         />
         <button
           className="btn btn-primary"
@@ -81,7 +167,7 @@ const DiscoverPage: React.FC = () => {
       {albums.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Albums</h2>
-          <AlbumList albums={albums} />
+          <AlbumList albums={albums} genre={genre} />
         </div>
       )}
 

@@ -2,17 +2,33 @@ import React from "react";
 import type { AlbumCardProps } from "../../models/Album";
 import albumPlaceholder from "../../assets/album.png";
 import "./AlbumCard.css"; // import CSS file
+import { Link } from "react-router-dom";
 
 const AlbumCard: React.FC<AlbumCardProps> = ({
   albumId,
   genre,
   titleList,
   coverUrl,
+  musicIds,
 }) => {
-  console.log(`Album [${albumId}] Cover URL:`, coverUrl);
+  const handleClick = () => {
+    try {
+      sessionStorage.setItem(
+        `album:${albumId}`,
+        JSON.stringify({ genre, musicIds })
+      );
+    } catch {}
+  };
 
   return (
-    <div className="card album-card h-100">
+     <Link
+      to={`/albums/${encodeURIComponent(albumId)}`}   
+      state={{ genre, musicIds }}                    
+      onClick={handleClick}                           // fallback for refresh
+      className="text-decoration-none text-dark d-block"
+      aria-label={`Open album ${albumId}`}
+    >
+        <div className="card album-card h-100">
       <div className="row g-0 h-100">
         {/* Album Cover */}
         <div className="col-md-4 d-flex align-items-center justify-content-center bg-light rounded-start">
@@ -51,6 +67,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
         </div>
       </div>
     </div>
+     </Link>
   );
 };
 
