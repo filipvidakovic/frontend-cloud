@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import MusicService from "../services/MusicService";
 import type { Song } from "../models/Song";
 import "./AlbumPage.css";
@@ -18,7 +18,9 @@ export default function AlbumDetailPage() {
 
     if ((!g || !ids?.length) && albumId) {
       try {
-        const cached = JSON.parse(sessionStorage.getItem(`album:${albumId}`) || "null");
+        const cached = JSON.parse(
+          sessionStorage.getItem(`album:${albumId}`) || "null"
+        );
         if (cached) {
           g ??= cached.genre;
           ids ??= cached.musicIds;
@@ -31,7 +33,11 @@ export default function AlbumDetailPage() {
     return { resolvedGenre: g || "", resolvedIds: ids ?? [] };
   }, [albumId, location.state]);
 
-  console.log("AlbumDetailPage resolved:", { albumId, genre: resolvedGenre, ids: resolvedIds });
+  console.log("AlbumDetailPage resolved:", {
+    albumId,
+    genre: resolvedGenre,
+    ids: resolvedIds,
+  });
 
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +57,10 @@ export default function AlbumDetailPage() {
           setSongs([]);
           return;
         }
-        const data = await MusicService.batchGetByGenre(resolvedGenre, resolvedIds);
+        const data = await MusicService.batchGetByGenre(
+          resolvedGenre,
+          resolvedIds
+        );
         setSongs(data);
       } catch (e: any) {
         setErr(e?.message ?? "Failed to load songs");
@@ -65,21 +74,29 @@ export default function AlbumDetailPage() {
     <div className="album-detail-container">
       <div className="album-detail-header">
         <div className="album-detail-header-left">
-          <button className="album-detail-back" onClick={() => navigate(-1)}>← Back</button>
+          <button className="album-detail-back" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
           <h4 className="album-detail-title">
             Album: <span className="text-muted">{albumId}</span>
           </h4>
         </div>
-        {resolvedGenre && <span className="album-detail-genre-badge">{resolvedGenre}</span>}
+        {resolvedGenre && (
+          <span className="album-detail-genre-badge">{resolvedGenre}</span>
+        )}
       </div>
 
       {loading && <div className="album-detail-message">Loading…</div>}
       {!loading && err && <div className="album-detail-message">{err}</div>}
       {!loading && !err && !canFetch && (
-        <div className="album-detail-message">Missing album data. Try navigating from the Albums page.</div>
+        <div className="album-detail-message">
+          Missing album data. Try navigating from the Albums page.
+        </div>
       )}
       {!loading && !err && canFetch && songs.length === 0 && (
-        <div className="album-detail-message">No songs found for this album.</div>
+        <div className="album-detail-message">
+          No songs found for this album.
+        </div>
       )}
 
       {!loading && !err && songs.length > 0 && (

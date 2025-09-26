@@ -18,8 +18,8 @@ const ArtistCard: React.FC<ArtistCardProps> = ({
       type: "artist",
       id: artistId,
       action: "subscribe",
-      userId: undefined
-    }
+      userId: undefined,
+    };
     SubscribeService.subscribe(data);
   }
 
@@ -34,13 +34,9 @@ const ArtistCard: React.FC<ArtistCardProps> = ({
         {/* Bio preview */}
         {bio && <p className="card-text artist-bio mb-3">{truncatedBio}</p>}
 
-        <button className="btn btn-sm btn-outline-primary mb-3" onClick={() => subscribe(artistId)}>
-          Subscribe
-        </button>
-
         {/* Genres */}
         {genres?.length > 0 && (
-          <div className="d-flex flex-wrap gap-2 mt-auto">
+          <div className="d-flex flex-wrap gap-2 mt-auto mb-3">
             {genres.map((genre, idx) => (
               <span key={idx} className="badge genre-badge">
                 {genre}
@@ -48,6 +44,12 @@ const ArtistCard: React.FC<ArtistCardProps> = ({
             ))}
           </div>
         )}
+        <button
+          className="btn btn-sm btn-outline-primary mb-3"
+          onClick={() => subscribe(artistId)}
+        >
+          Subscribe
+        </button>
       </div>
     </div>
   );

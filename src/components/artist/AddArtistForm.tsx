@@ -8,8 +8,8 @@ const AddArtistForm: React.FC = () => {
   const [bio, setBio] = useState("");
   const [genres, setGenres] = useState("");
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [, setResponse] = useState<any>(null);
+  const [, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
