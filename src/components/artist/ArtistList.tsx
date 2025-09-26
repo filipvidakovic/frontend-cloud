@@ -7,6 +7,10 @@ export interface ArtistListProps {
 }
 
 const ArtistList: React.FC<ArtistListProps> = ({ artists }) => {
+  if (!Array.isArray(artists)) {
+    return <p className="text-muted">No artists found.</p>;
+  }
+
   if (artists.length === 0) {
     return <p className="text-muted">No artists found.</p>;
   }

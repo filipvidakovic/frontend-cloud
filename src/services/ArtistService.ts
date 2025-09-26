@@ -43,15 +43,15 @@ class ArtistService {
 
       console.log("✅ Artists fetch response:", response.data);
 
-      // ✅ Return only the array of artists
-      return response.data;
+      // return just the array
+      return response.data.artists || [];
     } catch (error: any) {
       console.error("❌ Error fetching artists:", error);
       throw new Error(error.response?.data?.error || "Failed to fetch artists");
     }
   }
 
-  async getArtistById(artistId: string): Promise<ArtistCardProps > {
+  async getArtistById(artistId: string): Promise<ArtistCardProps> {
     try {
       const token = localStorage.getItem("token");
 

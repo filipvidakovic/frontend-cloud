@@ -63,10 +63,12 @@ class AuthService {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-      console.log(response.data)
+      console.log(response.data);
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to fetch user info");
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch user info"
+      );
     }
   }
 }
