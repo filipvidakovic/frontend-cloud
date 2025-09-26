@@ -10,6 +10,7 @@ import AddArtistForm from "./components/artist/AddArtistForm";
 import UpdateMusicPage from "./pages/UpdateMusicPage";
 import SubscriptionsPage from "./pages/SubscriptionPage";
 import AlbumPage from "./pages/AlbumPage";
+import FeedPage from "./pages/FeedPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -40,6 +41,11 @@ function App() {
               <li className="nav-item">
                 <Link className="nav-link" to="/">
                   Home
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/feed">
+                  Feed
                 </Link>
               </li>
               <li className="nav-item">
@@ -91,6 +97,7 @@ function App() {
       <div className="container">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/feed" element={<FeedPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
@@ -106,10 +113,7 @@ function App() {
 
           <Route path="/upload-music" element={<UploadMusicPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
-          <Route
-            path="/subscriptions"
-            element={<SubscriptionsPage />}
-          />
+          <Route path="/subscriptions" element={<SubscriptionsPage />} />
         </Routes>
       </div>
     </Router>
