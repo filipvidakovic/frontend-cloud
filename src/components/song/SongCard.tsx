@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import placeholderCover from "../../assets/album.png";
 import "./SongCard.css";
+import UserService from "../../services/UserService";
 
 interface SongCardProps {
   title: string;
   genre: string;
   album?: string | null;
-  fileUrl: string;          // presigned/public URL
+  fileUrl: string; // presigned/public URL
   coverUrl?: string | null;
   artists?: string[];
 }
@@ -29,6 +30,13 @@ const SongCard: React.FC<SongCardProps> = ({
       if (el.paused) {
         await el.play();
         setPlaying(true); // optimistic; events will keep it in sync
+
+        //record listening
+        try {
+          await UserService.recordListening(genre);
+        } catch (err) {
+          console.error("Failed to record listening:", err);
+        }
       } else {
         el.pause();
       }
@@ -74,7 +82,9 @@ const SongCard: React.FC<SongCardProps> = ({
     <div className={`song-card ${playing ? "playing" : ""}`}>
       <img
         src={coverUrl || placeholderCover}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).src = placeholderCover; }}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src = placeholderCover;
+        }}
         alt={`${title} cover`}
         className="song-card-cover"
       />
@@ -83,7 +93,10 @@ const SongCard: React.FC<SongCardProps> = ({
         <h6 className="song-card-title">{title}</h6>
 
         {artistsLabel && (
-          <div className="song-card-line song-card-artists" title={artistsLabel}>
+          <div
+            className="song-card-line song-card-artists"
+            title={artistsLabel}
+          >
             <span className="song-chip">🎤</span>
             <span className="song-ellipsis">{artistsLabel}</span>
           </div>
@@ -92,7 +105,8 @@ const SongCard: React.FC<SongCardProps> = ({
         <div className="song-card-line song-card-meta">
           <span className="song-chip">🎧</span>
           <span className="song-ellipsis">
-            {genre}{album ? ` · Album: ${album}` : ""}
+            {genre}
+            {album ? ` · Album: ${album}` : ""}
           </span>
         </div>
       </div>
