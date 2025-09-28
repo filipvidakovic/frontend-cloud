@@ -1,18 +1,20 @@
-/* container: centered with a nice max width */
+/* ===== Card layout ===== */
 .song-card {
   width: 100%;
-  max-width: 720px;         /* 👈 max width */
-  margin: 0 auto 14px;      /* center + spacing */
+  max-width: 720px;
+  margin: 0 auto 14px;
   display: grid;
-  grid-template-columns: 72px 1fr auto; /* cover | content | play */
+  grid-template-columns: 72px 1fr max-content; /* cover | content | CTA rail */
+  grid-template-rows: auto auto;               /* row 1: title/meta, row 2: reactions */
   gap: 12px;
-  align-items: center;
+  align-items: center;                          /* aligns first row items vertically */
   padding: 12px 14px;
   border: 1px solid #e9ecef;
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,.04);
   transition: box-shadow .15s ease, transform .08s ease;
+  box-sizing: border-box;
 }
 
 .song-card:hover {
@@ -25,8 +27,10 @@
   box-shadow: 0 0 0 3px rgba(30,144,255,.08);
 }
 
-/* cover */
+/* ===== Cover (left, spanning both rows) ===== */
 .song-card-cover {
+  grid-column: 1;
+  grid-row: 1 / span 2;
   width: 64px;
   height: 64px;
   border-radius: 10px;
@@ -35,9 +39,11 @@
   border: 1px solid #f1f3f5;
 }
 
-/* content */
+/* ===== Content (top-middle) ===== */
 .song-card-content {
-  min-width: 0; /* enable ellipsis */
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0; /* allow ellipsis to work */
 }
 
 .song-card-title {
@@ -45,6 +51,7 @@
   font-size: 1rem;
   font-weight: 600;
   color: #1f2937;
+  line-height: 1.2;
 }
 
 .song-card-line {
@@ -77,48 +84,11 @@
   white-space: nowrap;
 }
 
-/* play button */
-.song-card-play-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  cursor: pointer;
-  font-size: 1.05rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .15s ease, transform .05s ease, border-color .15s ease;
-}
-
-.song-card-play-btn:hover {
-  background: #f9fafb;
-}
-
-.song-card-play-btn:active {
-  transform: scale(0.98);
-}
-
-.song-card-play-btn.pause {
-  background: #fee2e2;
-  border-color: #fecaca;
-}
-
-/* responsive tweaks */
-@media (max-width: 576px) {
-  .song-card {
-    grid-template-columns: 56px 1fr auto;
-    padding: 10px 12px;
-  }
-  .song-card-cover {
-    width: 56px;
-    height: 56px;
-  }
-}
-
+/* ===== Reactions (below content, middle column) ===== */
 .song-card-reactions {
-  margin-top: 6px;
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 2px;
   display: flex;
   gap: 8px;
 }
@@ -142,3 +112,147 @@
   transform: scale(1.2);
 }
 
+/* ===== Right CTA rail (spans both rows): Play + Edit/Delete inline ===== */
+.song-card-cta {
+  grid-column: 3;
+  grid-row: 1 / span 2;       /* make the rail span both rows */
+  align-self: center;          /* vertically center the rail */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Play button */
+.song-card-play-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, transform .05s ease, border-color .15s ease;
+  flex: 0 0 auto;
+}
+
+.song-card-play-btn:hover { background: #f9fafb; }
+.song-card-play-btn:active { transform: scale(0.98); }
+.song-card-play-btn.pause { background: #fee2e2; border-color: #fecaca; }
+
+/* Edit/Delete buttons (inline with play button in CTA rail) */
+.song-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.song-action-btn {
+  border: 1px solid #ced4da;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.song-action-btn:hover { background: #f8f9fa; }
+.song-action-btn.danger { border-color: #e03131; }
+.song-action-btn.danger:hover { background: #ffe3e3; }
+
+/* ===== Responsive ===== */
+@media (max-width: 576px) {
+  .song-card {
+    grid-template-columns: 56px 1fr max-content;
+    padding: 10px 12px;
+  }
+
+  .song-card-cover { width: 56px; height: 56px; }
+
+  .song-card-play-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .song-card-cta { gap: 6px; }
+  .song-card-actions { gap: 4px; }
+  .song-action-btn { padding: 3px 6px; }
+}
+
+/* ===== Modal (edit popup) ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.38);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: 96%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  overflow: hidden;
+}
+
+.modal-header,
+.modal-footer {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.modal-footer {
+  border-top: 1px solid #eef2f7;
+  border-bottom: 0;
+}
+
+.modal-title { margin: 0; font-size: 1.05rem; }
+
+.modal-close {
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.modal-body { padding: 18px 20px; }
+
+.form-label {
+  display: block;
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.text-danger { color: #dc3545; }
+
+.row-flex { display: flex; gap: 10px; align-items: flex-end; }
+.checkbox-col { display: flex; align-items: center; padding-bottom: 2px; }
+.form-check { display: flex; align-items: center; gap: 8px; }
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  cursor: pointer;
+}
+
+.btn-light { background: #fff; }
+.btn-primary { background: #0d6efd; color: #fff; border-color: #0d6efd; }
