@@ -21,10 +21,14 @@ export interface UpdateMusicData {
   coverImage: string | null;
 }
 
+function getJwt() {
+  return localStorage.getItem("token");
+}
+
 class MusicService {
   async uploadMusic(data: UploadMusicData) {
     try {
-      const token = localStorage.getItem("token");
+      const token = getJwt();
       const response = await axios.post(`${API_URL}/music`, data, {
         headers: {
           "Content-Type": "application/json",
@@ -39,7 +43,7 @@ class MusicService {
 
   async getMusicDetails(genre: string, musicId: string) {
     try {
-      const token = localStorage.getItem("token");
+      const token = getJwt();
       const response = await axios.get(`${API_URL}/music`, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -59,7 +63,7 @@ class MusicService {
 
   async updateMusic(data: UpdateMusicData) {
     try {
-      const token = localStorage.getItem("token");
+      const token = getJwt();
       const response = await axios.put(`${API_URL}/music`, data, {
         headers: {
           "Content-Type": "application/json",
@@ -73,7 +77,7 @@ class MusicService {
   }
   async getAlbumsByGenre(genre: string) {
     try {
-      const token = localStorage.getItem("token");
+      const token = getJwt();
       const response = await axios.get(`${API_URL}/music/albums`, {
         headers: {
           "Content-Type": "application/json",
@@ -89,17 +93,25 @@ class MusicService {
       throw new Error(error.response?.data?.error || "Failed to fetch albums");
     }
   }
-  async batchGetByGenre(genre: string, musicIds: string[]) {
+  async batchGetByGenre(genre: string, musicIds: string[]): Promise<Song[]> {
     if (!genre) throw new Error("genre is required");
     if (!Array.isArray(musicIds) || musicIds.length === 0) {
       return []; // nothing to fetch
     }
 
+    const token = getJwt();
+    if (!token) throw new Error("User is not authenticated");
+
     try {
       const response = await axios.post(
         `${API_URL}/music/batchGetByGenre`,
         { genre, musicIds },
-        { headers: { "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       return response.data as Song[];
     } catch (error: any) {
@@ -108,7 +120,6 @@ class MusicService {
       );
     }
   }
-
 }
 
 export default new MusicService();

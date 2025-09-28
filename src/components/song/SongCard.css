@@ -116,3 +116,29 @@
     height: 56px;
   }
 }
+
+.song-card-reactions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.reaction-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.3rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.reaction-btn:hover {
+  transform: scale(1.2);
+  opacity: 0.9;
+}
+
+.reaction-btn.active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+

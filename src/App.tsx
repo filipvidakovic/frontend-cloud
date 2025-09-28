@@ -11,6 +11,8 @@ import UpdateMusicPage from "./pages/UpdateMusicPage";
 import SubscriptionsPage from "./pages/SubscriptionPage";
 import AlbumPage from "./pages/AlbumPage";
 import FeedPage from "./pages/FeedPage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -22,101 +24,113 @@ function App() {
     setIsLoggedIn(false);
   };
   return (
-    <Router>
-      <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
-        <div className="container">
-          <Link className="navbar-brand" to="/">
-            MyApp
-          </Link>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav me-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to="/">
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/feed">
-                  Feed
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/new-artist">
-                  New Artist
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/upload-music">
-                  Upload Music
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/update-music/">
-                  Update Music
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/discover">
-                  Discover
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/subscriptions">
-                  Subscriptions
-                </Link>
-              </li>
-            </ul>
-            <div className="d-flex">
-              {!isLoggedIn ? (
-                <>
-                  <Link to="/login" className="btn btn-outline-primary me-2">
-                    Sign In
+    <>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
+      <Router>
+        <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
+          <div className="container">
+            <Link className="navbar-brand" to="/">
+              MyApp
+            </Link>
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav me-auto">
+                <li className="nav-item">
+                  <Link className="nav-link" to="/">
+                    Home
                   </Link>
-                  <Link to="/register" className="btn btn-primary">
-                    Sign Up
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/feed">
+                    Feed
                   </Link>
-                </>
-              ) : (
-                <button onClick={handleLogout} className="btn btn-danger">
-                  Sign Out
-                </button>
-              )}
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/new-artist">
+                    New Artist
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/upload-music">
+                    Upload Music
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/update-music/">
+                    Update Music
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/discover">
+                    Discover
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/subscriptions">
+                    Subscriptions
+                  </Link>
+                </li>
+              </ul>
+              <div className="d-flex">
+                {!isLoggedIn ? (
+                  <>
+                    <Link to="/login" className="btn btn-outline-primary me-2">
+                      Sign In
+                    </Link>
+                    <Link to="/register" className="btn btn-primary">
+                      Sign Up
+                    </Link>
+                  </>
+                ) : (
+                  <button onClick={handleLogout} className="btn btn-danger">
+                    Sign Out
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+        </nav>
+
+        <div className="container">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/feed" element={<FeedPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/update-music/:genre/:musicId"
+              element={<UpdateMusicPage />}
+            />
+            <Route path="/albums/:albumId" element={<AlbumPage />} />
+            <Route
+              path="*"
+              element={<h2 className="text-center">Page Not Found</h2>}
+            />
+            <Route path="/new-artist" element={<AddArtistForm />} />
+
+            <Route path="/upload-music" element={<UploadMusicPage />} />
+            <Route path="/discover" element={<DiscoverPage />} />
+            <Route path="/subscriptions" element={<SubscriptionsPage />} />
+          </Routes>
         </div>
-      </nav>
-
-      <div className="container">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/feed" element={<FeedPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/update-music/:genre/:musicId"
-            element={<UpdateMusicPage />}
-          />
-          <Route path="/albums/:albumId" element={<AlbumPage />} />
-          <Route
-            path="*"
-            element={<h2 className="text-center">Page Not Found</h2>}
-          />
-          <Route path="/new-artist" element={<AddArtistForm />} />
-
-          <Route path="/upload-music" element={<UploadMusicPage />} />
-          <Route path="/discover" element={<DiscoverPage />} />
-          <Route path="/subscriptions" element={<SubscriptionsPage />} />
-        </Routes>
-      </div>
-    </Router>
+      </Router>
+    </>
   );
 }
 
