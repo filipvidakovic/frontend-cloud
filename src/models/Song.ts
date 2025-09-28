@@ -10,4 +10,5 @@ export interface Song {
   fileType?: string;
   fileSize?: number;
   createdAt?: string;
+  rate?:"love" | "like" | "dislike" | null;
 }

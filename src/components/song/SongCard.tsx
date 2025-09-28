@@ -2,26 +2,34 @@ import React, { useEffect, useRef, useState } from "react";
 import placeholderCover from "../../assets/album.png";
 import "./SongCard.css";
 import UserService from "../../services/UserService";
+import RateService from "../../services/RateService";
 
 interface SongCardProps {
+  musicId: string;
   title: string;
   genre: string;
   album?: string | null;
-  fileUrl: string; // presigned/public URL
+  fileUrl: string;
   coverUrl?: string | null;
   artists?: string[];
+  initialRate?: "love" | "like" | "dislike" | null;
 }
 
 const SongCard: React.FC<SongCardProps> = ({
+  musicId,
   title,
   genre,
   album,
   fileUrl,
   coverUrl,
   artists = [],
+  initialRate = null,
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(
+    initialRate
+  );
 
   const togglePlay = async () => {
     const el = audioRef.current;
@@ -29,9 +37,7 @@ const SongCard: React.FC<SongCardProps> = ({
     try {
       if (el.paused) {
         await el.play();
-        setPlaying(true); // optimistic; events will keep it in sync
-
-        //record listening
+        setPlaying(true);
         try {
           await UserService.recordListening(genre);
         } catch (err) {
@@ -46,7 +52,7 @@ const SongCard: React.FC<SongCardProps> = ({
     }
   };
 
-  // (Re)attach listeners whenever the audio element or src changes
+  // attach audio listeners
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
@@ -64,7 +70,6 @@ const SongCard: React.FC<SongCardProps> = ({
     el.addEventListener("ended", onEnded);
     el.addEventListener("error", onError);
 
-    // If the src just changed, ensure UI is reset until play starts
     setPlaying(!el.paused && !el.ended);
 
     return () => {
@@ -73,7 +78,24 @@ const SongCard: React.FC<SongCardProps> = ({
       el.removeEventListener("ended", onEnded);
       el.removeEventListener("error", onError);
     };
-  }, [fileUrl]); // <-- re-run when src changes (element remounted due to key)
+  }, [fileUrl]);
+
+  // ---- Reactions ----
+  const handleRate = async (newRate: "love" | "like" | "dislike") => {
+    try {
+      if (rate === newRate) {
+        // deselect
+        setRate(null);
+        await RateService.deleteRate(musicId);
+      } else {
+        // switch / set
+        setRate(newRate);
+        await RateService.setRate(musicId, newRate);
+      }
+    } catch (err) {
+      console.error("Failed to update rate:", err);
+    }
+  };
 
   const disabled = !fileUrl;
   const artistsLabel = artists.length ? artists.join(", ") : null;
@@ -109,6 +131,34 @@ const SongCard: React.FC<SongCardProps> = ({
             {album ? ` · Album: ${album}` : ""}
           </span>
         </div>
+
+        {/* Reaction buttons */}
+        <div className="song-card-reactions">
+          <button
+            type="button"
+            className={`reaction-btn ${rate === "love" ? "active" : ""}`}
+            onClick={() => handleRate("love")}
+            title="Love"
+          >
+            ❤️
+          </button>
+          <button
+            type="button"
+            className={`reaction-btn ${rate === "like" ? "active" : ""}`}
+            onClick={() => handleRate("like")}
+            title="Like"
+          >
+            👍
+          </button>
+          <button
+            type="button"
+            className={`reaction-btn ${rate === "dislike" ? "active" : ""}`}
+            onClick={() => handleRate("dislike")}
+            title="Dislike"
+          >
+            👎
+          </button>
+        </div>
       </div>
 
       <button
@@ -122,7 +172,6 @@ const SongCard: React.FC<SongCardProps> = ({
         {playing ? "⏸" : "▶️"}
       </button>
 
-      {/* key forces a fresh element when URL changes; effect above rebinds listeners */}
       <audio ref={audioRef} src={fileUrl} preload="none" key={fileUrl} />
     </div>
   );

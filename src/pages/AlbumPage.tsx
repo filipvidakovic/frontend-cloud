@@ -103,12 +103,14 @@ export default function AlbumDetailPage() {
         <div className="album-detail-songs">
           {songs.map((s) => (
             <SongCard
+              musicId={s.musicId}
               key={s.musicId}
               title={s.title}
               genre={s.genre}
               album={s.albumId ?? undefined}
               fileUrl={s.fileUrl ?? ""}
               coverUrl={s.coverUrl}
+              initialRate={s.rate ?? null}
             />
           ))}
         </div>
