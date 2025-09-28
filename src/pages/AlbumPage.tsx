@@ -33,12 +33,6 @@ export default function AlbumDetailPage() {
     return { resolvedGenre: g || "", resolvedIds: ids ?? [] };
   }, [albumId, location.state]);
 
-  console.log("AlbumDetailPage resolved:", {
-    albumId,
-    genre: resolvedGenre,
-    ids: resolvedIds,
-  });
-
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -57,10 +51,13 @@ export default function AlbumDetailPage() {
           setSongs([]);
           return;
         }
-        const data = await MusicService.batchGetByGenre(
-          resolvedGenre,
-          resolvedIds
+        const data = await MusicService.batchGetByGenre(resolvedGenre, resolvedIds);
+
+        console.log(
+          "Fetched album songs:",
+          data
         );
+
         setSongs(data);
       } catch (e: any) {
         setErr(e?.message ?? "Failed to load songs");
@@ -103,14 +100,14 @@ export default function AlbumDetailPage() {
         <div className="album-detail-songs">
           {songs.map((s) => (
             <SongCard
-              musicId={s.musicId}
               key={s.musicId}
+              musicId={s.musicId}
               title={s.title}
               genre={s.genre}
               album={s.albumId ?? undefined}
               fileUrl={s.fileUrl ?? ""}
               coverUrl={s.coverUrl}
-              initialRate={s.rate ?? null}
+              initialRate={s.rate ?? null} // rate now included from backend
             />
           ))}
         </div>

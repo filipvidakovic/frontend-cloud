@@ -3,6 +3,7 @@ import placeholderCover from "../../assets/album.png";
 import "./SongCard.css";
 import UserService from "../../services/UserService";
 import RateService from "../../services/RateService";
+import { toast } from "react-toastify";
 
 interface SongCardProps {
   musicId: string;
@@ -85,15 +86,18 @@ const SongCard: React.FC<SongCardProps> = ({
     try {
       if (rate === newRate) {
         // deselect
-        setRate(null);
         await RateService.deleteRate(musicId);
+        setRate(null);
+        toast.success("Rate removed successfully ✅");
       } else {
         // switch / set
+        const resp = await RateService.setRate(musicId, newRate);
         setRate(newRate);
-        await RateService.setRate(musicId, newRate);
+        toast.success(`You rated this song: ${newRate} ✅`);
       }
     } catch (err) {
       console.error("Failed to update rate:", err);
+      toast.error("Failed to update rate");
     }
   };
 
