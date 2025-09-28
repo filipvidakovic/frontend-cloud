@@ -1,0 +1,48 @@
+/* Container */
+.album-upload {
+  max-width: 640px;
+  margin: 3rem auto;
+}
+
+.album-upload h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.album-upload .text-muted {
+  color: #6c757d !important;
+}
+
+/* Inputs & buttons */
+.album-upload .form-control {
+  border-radius: 10px;
+}
+
+.album-upload .btn {
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+}
+
+/* Subtle card (if you wrap content) */
+.album-upload .card-soft {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+}
+
+/* Optional: a small status area style */
+.album-upload .status {
+  margin-top: 0.5rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  .album-upload {
+    margin: 1.5rem auto;
+    padding: 0 0.75rem;
+  }
+}
