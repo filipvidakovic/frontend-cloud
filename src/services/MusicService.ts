@@ -1,3 +1,4 @@
+// src/services/MusicService.ts
 import axios from "axios";
 import type { Song } from "../models/Song";
 
@@ -13,16 +14,28 @@ export interface UploadMusicData {
   fileContent: string;
 }
 
-export interface UpdateMusicData {
+export interface EditMusicPayload {
   musicId: string;
-  title: string | null;
-  fileName: string | null;
-  fileContent: string | null;
-  coverImage: string | null;
+  title?: string | null;
+  artistIds?: string[];
+  genres?: string[];
+  albumId?: string | null;     // send null to clear
+  fileName?: string | null;    // required when sending fileContent
+  fileContent?: string | null; // base64 (no data: prefix)
+  coverImage?: string | null;  // base64 (no data: prefix)
 }
 
 function getJwt() {
   return localStorage.getItem("token");
+}
+
+/** Keep nulls (for clearing fields), remove only undefined keys */
+function stripUndefined<T extends Record<string, any>>(obj: T): T {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k] = v;
+  }
+  return out as T;
 }
 
 class MusicService {
@@ -48,10 +61,7 @@ class MusicService {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        params: {
-          genre,
-          musicId,
-        },
+        params: { genre, musicId },
       });
       return response.data;
     } catch (error: any) {
@@ -61,20 +71,22 @@ class MusicService {
     }
   }
 
-  async updateMusic(data: UpdateMusicData) {
+  async updateMusic(data: EditMusicPayload) {
     try {
       const token = getJwt();
-      const response = await axios.put(`${API_URL}/music`, data, {
+      const payload = stripUndefined(data);
+      const response = await axios.put(`${API_URL}/music`, payload, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-      return response.data;
+      return response.data; // { message, updatedItem, ... }
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Update failed");
     }
   }
+
   async getAlbumsByGenre(genre: string) {
     try {
       const token = getJwt();
@@ -85,39 +97,64 @@ class MusicService {
         },
         params: { genre },
       });
-
-      console.log("📀 getAlbumsByGenre response:", response.data);
       return response.data.albums || [];
     } catch (error: any) {
-      console.error("❌ Error fetching albums:", error);
       throw new Error(error.response?.data?.error || "Failed to fetch albums");
     }
   }
-  async batchGetByGenre(genre: string, musicIds: string[]): Promise<Song[]> {
-    if (!genre) throw new Error("genre is required");
-    if (!Array.isArray(musicIds) || musicIds.length === 0) {
-      return []; // nothing to fetch
-    }
 
+  async batchGetByIds(musicIds: string[]): Promise<Song[]> {
+    if (!Array.isArray(musicIds) || musicIds.length === 0) return [];
     const token = getJwt();
-    if (!token) throw new Error("User is not authenticated");
 
     try {
-      const response = await axios.post(
-        `${API_URL}/music/batchGetByGenre`,
-        { genre, musicIds },
+      const res = await axios.post(
+        `${API_URL}/music/batchGetByIds`,
+        { musicIds }, // only what the lambda needs
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
         }
       );
-      return response.data as Song[];
+      return res.data as Song[];
+    } catch (err: any) {
+      // Fallback: some stacks still use the old path
+      try {
+        const res = await axios.post(
+          `${API_URL}/music/batchGetByGenre`,
+          { musicIds }, // most old handlers ignore extra fields anyway
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        );
+        return res.data as Song[];
+      } catch (err2: any) {
+        // Surface the first error if available; otherwise the fallback error
+        const e = err?.response?.data?.error || err2?.response?.data?.error;
+        throw new Error(e || "Failed to batch fetch songs");
+      }
+    }
+  }
+
+  async deleteMusic(musicId: string) {
+    if (!musicId) throw new Error("musicId is required");
+    try {
+      const token = getJwt();
+      const res = await axios.delete(`${API_URL}/music`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        params: { musicId },
+      });
+      return res.data;
     } catch (error: any) {
-      throw new Error(
-        error.response?.data?.error || "Failed to batch fetch songs"
-      );
+      throw new Error(error.response?.data?.error || "Delete failed");
     }
   }
 }

@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+// src/pages/AlbumPage.tsx (or AlbumDetailPage.tsx)
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import MusicService from "../services/MusicService";
-import type { Song } from "../models/Song";
 import "./AlbumPage.css";
 import SongCard from "../components/song/SongCard";
+import MusicService from "../services/MusicService";
+import type { Song } from "../models/Song";
 
 type AlbumState = { genre?: string; musicIds?: string[] };
 
 export default function AlbumDetailPage() {
-  const { albumId } = useParams();
+  const { albumId = "" } = useParams();
   const navigate = useNavigate();
   const location = useLocation() as { state?: AlbumState };
 
+  // Resolve genre + ids from router state, with sessionStorage fallback
   const { resolvedGenre, resolvedIds } = useMemo(() => {
     let g = location.state?.genre;
     let ids = location.state?.musicIds;
@@ -29,17 +31,22 @@ export default function AlbumDetailPage() {
         /* ignore */
       }
     }
-
     return { resolvedGenre: g || "", resolvedIds: ids ?? [] };
   }, [albumId, location.state]);
+
+  // Keep ids in state so we can remove on deletion
+  const [musicIds, setMusicIds] = useState<string[]>(resolvedIds);
+  useEffect(() => {
+    setMusicIds(resolvedIds);
+  }, [albumId, resolvedIds]);
 
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   const canFetch = useMemo(
-    () => !!resolvedGenre && resolvedIds.length > 0,
-    [resolvedGenre, resolvedIds]
+    () => !!resolvedGenre && musicIds.length > 0,
+    [resolvedGenre, musicIds]
   );
 
   useEffect(() => {
@@ -51,13 +58,8 @@ export default function AlbumDetailPage() {
           setSongs([]);
           return;
         }
-        const data = await MusicService.batchGetByGenre(resolvedGenre, resolvedIds);
-
-        console.log(
-          "Fetched album songs:",
-          data
-        );
-
+        // IMPORTANT: use current musicIds state (not resolvedIds)
+        const data = await MusicService.batchGetByIds(musicIds);
         setSongs(data);
       } catch (e: any) {
         setErr(e?.message ?? "Failed to load songs");
@@ -65,7 +67,22 @@ export default function AlbumDetailPage() {
         setLoading(false);
       }
     })();
-  }, [albumId, canFetch, resolvedGenre, resolvedIds]);
+  }, [albumId, canFetch, resolvedGenre, musicIds]);
+
+  // Remove from both songs[] and musicIds[]; keep sessionStorage in sync
+  const handleDeleted = (removedId: string) => {
+    setSongs((prev) => prev.filter((s) => s.musicId !== removedId));
+    setMusicIds((prev) => {
+      const next = prev.filter((id) => id !== removedId);
+      try {
+        sessionStorage.setItem(
+          `album:${albumId}`,
+          JSON.stringify({ genre: resolvedGenre, musicIds: next })
+        );
+      } catch {}
+      return next;
+    });
+  };
 
   return (
     <div className="album-detail-container">
@@ -91,9 +108,7 @@ export default function AlbumDetailPage() {
         </div>
       )}
       {!loading && !err && canFetch && songs.length === 0 && (
-        <div className="album-detail-message">
-          No songs found for this album.
-        </div>
+        <div className="album-detail-message">No songs found for this album.</div>
       )}
 
       {!loading && !err && songs.length > 0 && (
@@ -103,11 +118,13 @@ export default function AlbumDetailPage() {
               key={s.musicId}
               musicId={s.musicId}
               title={s.title}
-              genre={s.genre}
+              // Use the album’s resolved genre (consistent with album browse)
+              genre={resolvedGenre}
               album={s.albumId ?? undefined}
               fileUrl={s.fileUrl ?? ""}
               coverUrl={s.coverUrl}
               initialRate={s.rate ?? null} // rate now included from backend
+              onDeleted={handleDeleted}  // keep UI in sync after delete
             />
           ))}
         </div>

@@ -5,7 +5,6 @@ import Home from "./components/HomePage";
 import AuthService from "./services/AuthService";
 import { useState } from "react";
 import DiscoverPage from "./pages/DiscoverPage";
-import UploadMusicPage from "./pages/UploadMusicPage";
 import AddArtistForm from "./components/artist/AddArtistForm";
 import UpdateMusicPage from "./pages/UpdateMusicPage";
 import SubscriptionsPage from "./pages/SubscriptionPage";
@@ -13,6 +12,8 @@ import AlbumPage from "./pages/AlbumPage";
 import FeedPage from "./pages/FeedPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UploadAlbumPage from "./pages/UploadAlbumPage";
+import UploadMusicPage from "./pages/UploadMusicPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -72,8 +73,8 @@ function App() {
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/update-music/">
-                    Update Music
+                  <Link className="nav-link" to="/upload-album/">
+                    Upload Album
                   </Link>
                 </li>
                 <li className="nav-item">
@@ -124,6 +125,7 @@ function App() {
             />
             <Route path="/new-artist" element={<AddArtistForm />} />
 
+            <Route path="/upload-album" element={<UploadAlbumPage />} />
             <Route path="/upload-music" element={<UploadMusicPage />} />
             <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/subscriptions" element={<SubscriptionsPage />} />
