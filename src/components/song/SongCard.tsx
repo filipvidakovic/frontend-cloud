@@ -43,6 +43,72 @@ export default function SongCard({
   const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(initialRate);
   const [editOpen, setEditOpen] = useState(false);
 
+  // browser-cache indicator (best-effort)
+  const [preloaded, setPreloaded] = useState<boolean>(false);
+
+  // ---- Helpers to detect "fully buffered" (best-effort) ----
+  const computePreloaded = (el: HTMLAudioElement | null) => {
+    if (!el) return false;
+    try {
+      if (!isFinite(el.duration) || el.duration <= 0) return false;
+      const ranges = el.buffered;
+      if (!ranges || ranges.length === 0) return false;
+      // find max end
+      let end = 0;
+      for (let i = 0; i < ranges.length; i++) {
+        end = Math.max(end, ranges.end(i));
+      }
+      // consider it "preloaded" if we have (almost) the entire duration
+      const epsilon = 0.5; // seconds tolerance
+      return end >= el.duration - epsilon;
+    } catch {
+      return false;
+    }
+  };
+
+  // Update the preloaded flag whenever media state changes
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+
+    const update = () => setPreloaded(computePreloaded(el));
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onEnded = () => setPlaying(false);
+    const onError = () => {
+      console.error("Audio error", el.error, { src: el.currentSrc });
+      setPlaying(false);
+    };
+
+    // events that impact buffering/metadata
+    el.addEventListener("loadedmetadata", update);
+    el.addEventListener("progress", update);
+    el.addEventListener("canplaythrough", update);
+    el.addEventListener("emptied", () => setPreloaded(false));
+
+    // play-state events
+    el.addEventListener("play", onPlay);
+    el.addEventListener("pause", onPause);
+    el.addEventListener("ended", onEnded);
+    el.addEventListener("error", onError);
+
+    // initial snapshot
+    update();
+    setPlaying(!el.paused && !el.ended);
+
+    return () => {
+      el.removeEventListener("loadedmetadata", update);
+      el.removeEventListener("progress", update);
+      el.removeEventListener("canplaythrough", update);
+      el.removeEventListener("emptied", () => setPreloaded(false));
+
+      el.removeEventListener("play", onPlay);
+      el.removeEventListener("pause", onPause);
+      el.removeEventListener("ended", onEnded);
+      el.removeEventListener("error", onError);
+    };
+  }, [localFileUrl]);
+
   // Play/pause
   const togglePlay = async () => {
     const el = audioRef.current;
@@ -66,33 +132,38 @@ export default function SongCard({
     }
   };
 
-  // Keep play state in sync with audio element
-  useEffect(() => {
+  // "Make available" = tell the browser to fetch & keep the media in its own cache
+  const handleMakeAvailableOffline = () => {
     const el = audioRef.current;
     if (!el) return;
+    // Encourage caching
+    el.preload = "auto";
+    // Reload to start fetching now (without starting playback)
+    el.load();
+    toast.success('Song is being preloaded (browser cache) ✅');
+  };
 
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => setPlaying(false);
-    const onError = () => {
-      console.error("Audio error", el.error, { src: el.currentSrc });
-      setPlaying(false);
-    };
+  // No real way to clear browser cache programmatically, so we just reset hint/UI.
+  const handleRemoveOffline = () => {
+    const el = audioRef.current;
+    if (el) {
+      el.preload = "none";
+      el.load();
+    }
+    setPreloaded(false);
+    toast.info("Preload hint cleared (browser may still keep the file).");
+  };
 
-    el.addEventListener("play", onPlay);
-    el.addEventListener("pause", onPause);
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("error", onError);
-
-    setPlaying(!el.paused && !el.ended);
-
-    return () => {
-      el.removeEventListener("play", onPlay);
-      el.removeEventListener("pause", onPause);
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("error", onError);
-    };
-  }, [localFileUrl]);
+  // Download via MusicService (302 to S3)
+  const handleDownload = async () => {
+    try {
+      await MusicService.downloadMusic(musicId);
+      toast.success("Download started 💾");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Download failed");
+    }
+  };
 
   // Reactions
   const handleRate = async (newRate: "love" | "like" | "dislike") => {
@@ -158,7 +229,10 @@ export default function SongCard({
 
         {/* Content */}
         <div className="song-card-content">
-          <h6 className="song-card-title">{localTitle}</h6>
+          <h6 className="song-card-title">
+            {localTitle}{" "}
+            {preloaded && <span className="song-chip" title="Likely cached in browser">📦</span>}
+          </h6>
 
           {artistsLabel && (
             <div className="song-card-line song-card-artists" title={artistsLabel}>
@@ -176,7 +250,7 @@ export default function SongCard({
           </div>
         </div>
 
-        {/* Reactions (optional row – style as you like) */}
+        {/* Reactions */}
         <div className="song-card-reactions">
           <button
             type="button"
@@ -204,7 +278,7 @@ export default function SongCard({
           </button>
         </div>
 
-        {/* Right CTA rail: Play + Edit/Delete inline */}
+        {/* Right CTA rail: Play + Edit/Delete + Preload/Download */}
         <div className="song-card-cta">
           <button
             type="button"
@@ -218,6 +292,35 @@ export default function SongCard({
           </button>
 
           <div className="song-card-actions" aria-label="Song actions">
+            <button
+              type="button"
+              className="song-action-btn"
+              onClick={handleDownload}
+              title="Download file"
+            >
+              ⬇️
+            </button>
+
+            {preloaded ? (
+              <button
+                type="button"
+                className="song-action-btn"
+                onClick={handleRemoveOffline}
+                title="Reset preload hint"
+              >
+                🗑️📦
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="song-action-btn"
+                onClick={handleMakeAvailableOffline}
+                title='Make available "offline" (browser cache)'
+              >
+                📥
+              </button>
+            )}
+
             <button
               type="button"
               className="song-action-btn"
@@ -238,8 +341,8 @@ export default function SongCard({
           </div>
         </div>
 
-        {/* Single audio element (bound to localFileUrl) */}
-        <audio ref={audioRef} src={localFileUrl} preload="none" key={localFileUrl} />
+        {/* Single audio element (browser cache only) */}
+        <audio ref={audioRef} src={localFileUrl} preload="none" />
       </div>
 
       {editOpen && (
