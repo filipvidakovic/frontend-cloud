@@ -14,6 +14,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UploadAlbumPage from "./pages/UploadAlbumPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
+import NotificationsPage from "./pages/NotificationPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -87,6 +88,11 @@ function App() {
                     Subscriptions
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/notifications">
+                    Notifications
+                  </Link>
+                </li>
               </ul>
               <div className="d-flex">
                 {!isLoggedIn ? (
@@ -129,6 +135,7 @@ function App() {
             <Route path="/upload-music" element={<UploadMusicPage />} />
             <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/subscriptions" element={<SubscriptionsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Routes>
         </div>
       </Router>
