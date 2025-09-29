@@ -120,24 +120,8 @@ class MusicService {
       );
       return res.data as Song[];
     } catch (err: any) {
-      // Fallback: some stacks still use the old path
-      try {
-        const res = await axios.post(
-          `${API_URL}/music/batchGetByGenre`,
-          { musicIds }, // most old handlers ignore extra fields anyway
-          {
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-          }
-        );
-        return res.data as Song[];
-      } catch (err2: any) {
-        // Surface the first error if available; otherwise the fallback error
-        const e = err?.response?.data?.error || err2?.response?.data?.error;
+        const e = err?.response?.data?.error;
         throw new Error(e || "Failed to batch fetch songs");
-      }
     }
   }
 
@@ -156,6 +140,25 @@ class MusicService {
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Delete failed");
     }
+  }
+  getDownloadUrl(musicId: string): string {
+    if (!musicId) throw new Error("musicId is required");
+    return `${API_URL}/music/download?musicId=${encodeURIComponent(musicId)}`;
+  }
+
+  /**
+   * Trigger a browser download via the API's 302 redirect.
+   * Note: if the endpoint is protected by Cognito, an <a> click cannot add Authorization headers.
+   * Keep the endpoint public or implement a fetch+blob fallback.
+   */
+  async downloadMusic(musicId: string): Promise<void> {
+    const url = this.getDownloadUrl(musicId);
+    const a = document.createElement("a");
+    a.href = url;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 }
 
