@@ -161,20 +161,20 @@ class MusicService {
     a.remove();
   }
 
-  async startTranscription (songId: string) {
-    const token = localStorage.getItem("token");
-    const res = await axios.post(
-      `${API_URL}/transcriptions/start`,
-      { songId },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      }
-    );
-    return res.data;
-  }
+  // async startTranscription (songId: string) {
+  //   const token = localStorage.getItem("token");
+  //   const res = await axios.post(
+  //     `${API_URL}/transcriptions/start`,
+  //     { songId },
+  //     {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         ...(token && { Authorization: `Bearer ${token}` }),
+  //       },
+  //     }
+  //   );
+  //   return res.data;
+  // }
 
   async getTranscription(musicId: string) {
     const res = await fetch(`/api/transcriptions/${musicId}`);
