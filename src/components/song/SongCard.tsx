@@ -17,6 +17,7 @@ export interface SongCardProps {
   artists?: string[];
   initialRate?: "love" | "like" | "dislike" | null;
   onDeleted?: (musicId: string) => void; // notify parent after delete
+  onPlaySelected?: (musicId: string) => void;
 }
 
 export default function SongCard({
@@ -29,6 +30,7 @@ export default function SongCard({
   artists = [],
   initialRate = null,
   onDeleted,
+  onPlaySelected,
 }: SongCardProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -117,7 +119,7 @@ export default function SongCard({
       if (el.paused) {
         await el.play();
         setPlaying(true);
-        // record listening (best effort)
+        onPlaySelected?.(musicId);
         try {
           await UserService.recordListening(genre);
         } catch (err) {

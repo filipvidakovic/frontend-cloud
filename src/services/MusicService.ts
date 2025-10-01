@@ -160,6 +160,28 @@ class MusicService {
     a.click();
     a.remove();
   }
+
+  async startTranscription (songId: string) {
+    const token = localStorage.getItem("token");
+    const res = await axios.post(
+      `${API_URL}/transcriptions/start`,
+      { songId },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      }
+    );
+    return res.data;
+  }
+
+  async getTranscription(musicId: string) {
+    const res = await fetch(`/api/transcriptions/${musicId}`);
+    if (!res.ok) throw new Error("Failed to fetch transcription");
+    return res.json();
+  }
+
 }
 
 export default new MusicService();
