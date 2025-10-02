@@ -5,7 +5,9 @@ import "./SongCard.css";
 import UserService from "../../services/UserService";
 import RateService from "../../services/RateService";
 import { toast } from "react-toastify";
-import MusicService, { type EditMusicPayload } from "../../services/MusicService";
+import MusicService, {
+  type EditMusicPayload,
+} from "../../services/MusicService";
 
 export interface SongCardProps {
   musicId: string;
@@ -17,6 +19,7 @@ export interface SongCardProps {
   artists?: string[];
   initialRate?: "love" | "like" | "dislike" | null;
   onDeleted?: (musicId: string) => void; // notify parent after delete
+  showActions?: boolean;
 }
 
 export default function SongCard({
@@ -29,18 +32,23 @@ export default function SongCard({
   artists = [],
   initialRate = null,
   onDeleted,
+  showActions = true,
 }: SongCardProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // local state so the card can reflect updates without reloading the list
   const [localTitle, setLocalTitle] = useState(title);
   const [localAlbum, setLocalAlbum] = useState<string | null>(album ?? null);
-  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(coverUrl ?? null);
+  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(
+    coverUrl ?? null
+  );
   const [localFileUrl] = useState(fileUrl);
 
   const [playing, setPlaying] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(initialRate);
+  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(
+    initialRate
+  );
   const [editOpen, setEditOpen] = useState(false);
 
   // browser-cache indicator (best-effort)
@@ -140,7 +148,7 @@ export default function SongCard({
     el.preload = "auto";
     // Reload to start fetching now (without starting playback)
     el.load();
-    toast.success('Song is being preloaded (browser cache) ✅');
+    toast.success("Song is being preloaded (browser cache) ✅");
   };
 
   // No real way to clear browser cache programmatically, so we just reset hint/UI.
@@ -231,11 +239,18 @@ export default function SongCard({
         <div className="song-card-content">
           <h6 className="song-card-title">
             {localTitle}{" "}
-            {preloaded && <span className="song-chip" title="Likely cached in browser">📦</span>}
+            {preloaded && (
+              <span className="song-chip" title="Likely cached in browser">
+                📦
+              </span>
+            )}
           </h6>
 
           {artistsLabel && (
-            <div className="song-card-line song-card-artists" title={artistsLabel}>
+            <div
+              className="song-card-line song-card-artists"
+              title={artistsLabel}
+            >
               <span className="song-chip">🎤</span>
               <span className="song-ellipsis">{artistsLabel}</span>
             </div>
@@ -291,69 +306,72 @@ export default function SongCard({
             {playing ? "⏸" : "▶️"}
           </button>
 
-          <div className="song-card-actions" aria-label="Song actions">
-            <button
-              type="button"
-              className="song-action-btn"
-              onClick={handleDownload}
-              title="Download file"
-            >
-              ⬇️
-            </button>
-
-            {preloaded ? (
+          {showActions && ( // 👈 only show if true
+            <div className="song-card-actions" aria-label="Song actions">
               <button
                 type="button"
                 className="song-action-btn"
-                onClick={handleRemoveOffline}
-                title="Reset preload hint"
+                onClick={handleDownload}
+                title="Download file"
               >
-                🗑️📦
+                ⬇️
               </button>
-            ) : (
+
+              {preloaded ? (
+                <button
+                  type="button"
+                  className="song-action-btn"
+                  onClick={handleRemoveOffline}
+                  title="Reset preload hint"
+                >
+                  🗑️📦
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="song-action-btn"
+                  onClick={handleMakeAvailableOffline}
+                  title='Make available "offline" (browser cache)'
+                >
+                  📥
+                </button>
+              )}
+
               <button
                 type="button"
                 className="song-action-btn"
-                onClick={handleMakeAvailableOffline}
-                title='Make available "offline" (browser cache)'
+                onClick={openEdit}
+                title="Edit song"
               >
-                📥
+                ✏️
               </button>
-            )}
-
-            <button
-              type="button"
-              className="song-action-btn"
-              onClick={openEdit}
-              title="Edit song"
-            >
-              ✏️
-            </button>
-            <button
-              type="button"
-              className="song-action-btn danger"
-              onClick={handleDelete}
-              disabled={deleting}
-              title={deleting ? "Deleting…" : "Delete song"}
-            >
-              {deleting ? "…" : "🗑️"}
-            </button>
-          </div>
+              <button
+                type="button"
+                className="song-action-btn danger"
+                onClick={handleDelete}
+                disabled={deleting}
+                title={deleting ? "Deleting…" : "Delete song"}
+              >
+                {deleting ? "…" : "🗑️"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Single audio element (browser cache only) */}
         <audio ref={audioRef} src={localFileUrl} preload="none" />
       </div>
 
-      {editOpen && (
-        <EditSongModal
-          musicId={musicId}
-          initialTitle={localTitle}
-          initialAlbumId={localAlbum}
-          onClose={closeEdit}
-          onSaved={onSaved}
-        />
-      )}
+      {showActions &&
+        editOpen && ( // 👈 hide modal if showActions=false
+          <EditSongModal
+            musicId={musicId}
+            initialTitle={localTitle}
+            initialAlbumId={localAlbum}
+            onClose={closeEdit}
+            onSaved={onSaved}
+          />
+        )}
     </>
   );
 }
@@ -453,7 +471,9 @@ function EditSongModal({
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <label className="form-label">Genres (comma-separated, leave blank to keep)</label>
+          <label className="form-label">
+            Genres (comma-separated, leave blank to keep)
+          </label>
           <input
             className="form-control"
             placeholder="rock, pop"
@@ -511,7 +531,11 @@ function EditSongModal({
           <button className="btn btn-light" onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+          >
             {saving ? "Saving…" : "Save changes"}
           </button>
         </div>
