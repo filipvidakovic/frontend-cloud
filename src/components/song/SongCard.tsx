@@ -121,7 +121,7 @@ export default function SongCard({
         setPlaying(true);
         onPlaySelected?.(musicId);
         try {
-          await UserService.recordListening(genre);
+          await UserService.recordListening(genres[0]);
         } catch (err) {
           console.error("Failed to record listening:", err);
         }
