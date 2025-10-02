@@ -36,3 +36,17 @@
 span {
   cursor: pointer;
 }
+
+/* ArtistCard.css additions */
+.artist-card .btn-toolbar {
+  display: inline-flex;
+  gap: 8px;
+}
+.genre-badge {
+  background: #f1f3f5;
+  color: #343a40;
+  border: 1px solid #e9ecef;
+}
+/* basic support for the manually-mounted modal */
+.modal { display: block; }
+.modal-backdrop.show { opacity: .5; }

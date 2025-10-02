@@ -68,6 +68,50 @@ class ArtistService {
       throw new Error(error.response?.data?.error || "Failed to fetch artists");
     }
   }
+
+  async deleteArtist(artistId: string) {
+  const token = localStorage.getItem("token");
+  try {
+    const url = `${API_URL}/artists/${encodeURIComponent(artistId)}`;
+    const res = await axios.delete(url, {
+      data: { artistId }, // harmless; DELETE bodies are quirky in browsers—axios wants data key
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return res.data;
+  } catch (errFirst: any) {
+    // Fallback if your API only exposes POST
+    const res = await axios.post(`${API_URL}/artists/delete`, { artistId }, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return res.data;
+  }
+}
+
+async updateArtist(artistId: string, data: Partial<ArtistCardProps> & {
+  age?: number; bio?: string; genres?: string[]; name?: string; lastname?: string;
+}) {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.put(`${API_URL}/artists/${artistId}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ Error updating artist:", err);
+    throw new Error(err.response?.data?.error || "Artist update failed");
+  }
+}
+
+
 }
 
 export default new ArtistService();

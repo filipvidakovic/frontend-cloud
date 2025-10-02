@@ -4,6 +4,8 @@ import type { ArtistCardProps } from "../../models/Artist";
 
 export interface ArtistListProps {
   artists: ArtistCardProps[];
+  onDeleted?: (artistId: string) => void;                                
+  onUpdated?: (artistId: string, u: Partial<ArtistCardProps>) => void;  
 }
 
 const ArtistList: React.FC<ArtistListProps> = ({ artists }) => {
