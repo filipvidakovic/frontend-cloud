@@ -11,4 +11,6 @@ export interface Song {
   fileSize?: number;
   createdAt?: string;
   rate?:"love" | "like" | "dislike" | null;
+  hasTranscript?: boolean;
+  transcriptUrl?: string; // S3 URL of JSON/txt transcript
 }
