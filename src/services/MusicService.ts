@@ -19,10 +19,10 @@ export interface EditMusicPayload {
   title?: string | null;
   artistIds?: string[];
   genres?: string[];
-  albumId?: string | null;     // send null to clear
-  fileName?: string | null;    // required when sending fileContent
+  albumId?: string | null; // send null to clear
+  fileName?: string | null; // required when sending fileContent
   fileContent?: string | null; // base64 (no data: prefix)
-  coverImage?: string | null;  // base64 (no data: prefix)
+  coverImage?: string | null; // base64 (no data: prefix)
 }
 
 function getJwt() {
@@ -120,8 +120,8 @@ class MusicService {
       );
       return res.data as Song[];
     } catch (err: any) {
-        const e = err?.response?.data?.error;
-        throw new Error(e || "Failed to batch fetch songs");
+      const e = err?.response?.data?.error;
+      throw new Error(e || "Failed to batch fetch songs");
     }
   }
 
@@ -159,6 +159,37 @@ class MusicService {
     document.body.appendChild(a);
     a.click();
     a.remove();
+  }
+
+  async getAllSongs(
+    limit: number = 6,
+    lastKey?: any
+  ): Promise<{
+    songs: Song[];
+    lastKey?: any;
+  }> {
+    try {
+      const token = getJwt();
+      const response = await axios.get(`${API_URL}/music/all`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        params: {
+          limit,
+          ...(lastKey ? { lastKey: JSON.stringify(lastKey) } : {}),
+        },
+      });
+      console.log(response.data.songs);
+      return {
+        songs: response.data.songs || [],
+        lastKey: response.data.lastKey
+          ? JSON.parse(response.data.lastKey)
+          : undefined,
+      };
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || "Failed to fetch songs");
+    }
   }
 }
 
