@@ -17,6 +17,7 @@ export interface SongCardProps {
   artists?: string[];
   initialRate?: "love" | "like" | "dislike" | null;
   onDeleted?: (musicId: string) => void; // notify parent after delete
+  onPlaySelected?: (musicId: string) => void;
 }
 
 export default function SongCard({
@@ -29,6 +30,7 @@ export default function SongCard({
   artists = [],
   initialRate = null,
   onDeleted,
+  onPlaySelected,
 }: SongCardProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -111,23 +113,26 @@ export default function SongCard({
 
   // Play/pause
   const togglePlay = async () => {
-  const el = audioRef.current;
-  if (!el) return;
-  try {
-    if (el.paused) {
-      await el.play();
-      setPlaying(true);
-      try { await UserService.recordListening(localGenres[0] ?? "unknown"); } catch {}
-    } else {
-      el.pause();
+    const el = audioRef.current;
+    if (!el) return;
+    try {
+      if (el.paused) {
+        await el.play();
+        setPlaying(true);
+        onPlaySelected?.(musicId);
+        try {
+          await UserService.recordListening(genre);
+        } catch (err) {
+          console.error("Failed to record listening:", err);
+        }
+      } else {
+        el.pause();
+      }
+    } catch (err) {
+      console.error("Audio play failed:", err, { src: el?.currentSrc });
+      setPlaying(false);
     }
-  } catch (err: any) {
-    console.error("Audio play failed:", err, { src: el?.currentSrc });
-    toast.error(err?.message || "Could not start playback");
-    setPlaying(false);
-  }
-};
-
+  };
 
   // "Make available" = tell the browser to fetch & keep the media in its own cache
   const handleMakeAvailableOffline = () => {

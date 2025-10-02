@@ -158,6 +158,16 @@ const UploadMusicPage: React.FC = () => {
       `Genres: ${genresShown || "(none)"}`
     );
 
+    // if (idShown) {
+    //   try {
+    //     await MusicService.startTranscription(idShown);
+    //     toast.info(`Transcription started for song ${idShown}. It may take a few minutes.`);
+    //     console.log("Transcription started for song:", idShown);
+    //   } catch (err: any) {
+    //     toast.error(`Failed to start transcription for song ${idShown}: ${err.message}`);
+    //     console.error("Failed to start transcription:", err);
+    //   }
+    // }
 
   } catch (err: any) {
     console.error("Upload error:", err);

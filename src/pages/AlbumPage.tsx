@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+// src/pages/AlbumPage.tsx (or AlbumDetailPage.tsx)
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./AlbumPage.css";
 import SongCard from "../components/song/SongCard";
@@ -11,6 +12,10 @@ export default function AlbumDetailPage() {
   const { albumId = "" } = useParams();
   const navigate = useNavigate();
   const location = useLocation() as { state?: AlbumState };
+  const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [transcription, setTranscription] = useState<string | null>(null);
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
+
 
   // Resolve genre + ids from router state, with sessionStorage fallback
   const { resolvedGenre, resolvedIds } = useMemo(() => {
@@ -32,6 +37,23 @@ export default function AlbumDetailPage() {
     }
     return { resolvedGenre: g || "", resolvedIds: ids ?? [] };
   }, [albumId, location.state]);
+
+  useEffect(() => {
+    if (!activeSongId) return;
+    (async () => {
+      setLoadingTranscript(true);
+      setTranscription(null);
+      try {
+        const res = await MusicService.getTranscription(activeSongId);
+        setTranscription(res?.transcription || "No transcription available.");
+      } catch (err) {
+        console.error(err);
+        setTranscription("Failed to load transcription.");
+      } finally {
+        setLoadingTranscript(false);
+      }
+    })();
+  }, [activeSongId]);
 
   // Keep ids in state so we can remove on deletion
   const [musicIds, setMusicIds] = useState<string[]>(resolvedIds);
@@ -122,10 +144,20 @@ export default function AlbumDetailPage() {
               coverUrl={s.coverUrl}
               initialRate={s.rate ?? null}
               onDeleted={handleDeleted}
+              onPlaySelected={setActiveSongId}
             />
           ))}
         </div>
       )}
+      <div className="album-detail-transcription">
+        <h5>Transcription</h5>
+        {!activeSongId && <p>Select a song to see transcription.</p>}
+        {loadingTranscript && <p>Loading transcription…</p>}
+        {activeSongId && !loadingTranscript && (
+          <pre className="transcription-text">{transcription}</pre>
+        )}
+      </div>
     </div>
+    
   );
 }
