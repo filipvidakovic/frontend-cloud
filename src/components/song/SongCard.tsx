@@ -1,5 +1,5 @@
 // src/components/song/SongCard.tsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import placeholderCover from "../../assets/album.png";
 import "./SongCard.css";
 import UserService from "../../services/UserService";
@@ -10,7 +10,7 @@ import MusicService, { type EditMusicPayload } from "../../services/MusicService
 export interface SongCardProps {
   musicId: string;
   title: string;
-  genre: string;
+  genres: string[];                 // current song genres (array)
   album?: string | null;
   fileUrl: string;
   coverUrl?: string | null;
@@ -22,7 +22,7 @@ export interface SongCardProps {
 export default function SongCard({
   musicId,
   title,
-  genre,
+  genres,
   album,
   fileUrl,
   coverUrl,
@@ -36,7 +36,8 @@ export default function SongCard({
   const [localTitle, setLocalTitle] = useState(title);
   const [localAlbum, setLocalAlbum] = useState<string | null>(album ?? null);
   const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(coverUrl ?? null);
-  const [localFileUrl] = useState(fileUrl);
+  const [localFileUrl, setLocalFileUrl] = useState(fileUrl); // <-- make this mutable
+  const [localGenres, setLocalGenres] = useState<string[]>(genres ?? []);
 
   const [playing, setPlaying] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -46,6 +47,13 @@ export default function SongCard({
   // browser-cache indicator (best-effort)
   const [preloaded, setPreloaded] = useState<boolean>(false);
 
+  // keep in sync if parent updates props later
+  useEffect(() => setLocalGenres(genres ?? []), [genres]);
+  useEffect(() => setLocalCoverUrl(coverUrl ?? null), [coverUrl]);
+  useEffect(() => setLocalTitle(title), [title]);
+  useEffect(() => setLocalAlbum(album ?? null), [album]);
+  useEffect(() => setLocalFileUrl(fileUrl), [fileUrl]);
+
   // ---- Helpers to detect "fully buffered" (best-effort) ----
   const computePreloaded = (el: HTMLAudioElement | null) => {
     if (!el) return false;
@@ -53,12 +61,8 @@ export default function SongCard({
       if (!isFinite(el.duration) || el.duration <= 0) return false;
       const ranges = el.buffered;
       if (!ranges || ranges.length === 0) return false;
-      // find max end
       let end = 0;
-      for (let i = 0; i < ranges.length; i++) {
-        end = Math.max(end, ranges.end(i));
-      }
-      // consider it "preloaded" if we have (almost) the entire duration
+      for (let i = 0; i < ranges.length; i++) end = Math.max(end, ranges.end(i));
       const epsilon = 0.5; // seconds tolerance
       return end >= el.duration - epsilon;
     } catch {
@@ -66,7 +70,6 @@ export default function SongCard({
     }
   };
 
-  // Update the preloaded flag whenever media state changes
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
@@ -80,19 +83,17 @@ export default function SongCard({
       setPlaying(false);
     };
 
-    // events that impact buffering/metadata
     el.addEventListener("loadedmetadata", update);
     el.addEventListener("progress", update);
     el.addEventListener("canplaythrough", update);
-    el.addEventListener("emptied", () => setPreloaded(false));
+    const onEmptied = () => setPreloaded(false);
+    el.addEventListener("emptied", onEmptied);
 
-    // play-state events
     el.addEventListener("play", onPlay);
     el.addEventListener("pause", onPause);
     el.addEventListener("ended", onEnded);
     el.addEventListener("error", onError);
 
-    // initial snapshot
     update();
     setPlaying(!el.paused && !el.ended);
 
@@ -100,8 +101,7 @@ export default function SongCard({
       el.removeEventListener("loadedmetadata", update);
       el.removeEventListener("progress", update);
       el.removeEventListener("canplaythrough", update);
-      el.removeEventListener("emptied", () => setPreloaded(false));
-
+      el.removeEventListener("emptied", onEmptied);
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
       el.removeEventListener("ended", onEnded);
@@ -111,39 +111,33 @@ export default function SongCard({
 
   // Play/pause
   const togglePlay = async () => {
-    const el = audioRef.current;
-    if (!el) return;
-    try {
-      if (el.paused) {
-        await el.play();
-        setPlaying(true);
-        // record listening (best effort)
-        try {
-          await UserService.recordListening(genre);
-        } catch (err) {
-          console.error("Failed to record listening:", err);
-        }
-      } else {
-        el.pause();
-      }
-    } catch (err) {
-      console.error("Audio play failed:", err, { src: el?.currentSrc });
-      setPlaying(false);
+  const el = audioRef.current;
+  if (!el) return;
+  try {
+    if (el.paused) {
+      await el.play();
+      setPlaying(true);
+      try { await UserService.recordListening(localGenres[0] ?? "unknown"); } catch {}
+    } else {
+      el.pause();
     }
-  };
+  } catch (err: any) {
+    console.error("Audio play failed:", err, { src: el?.currentSrc });
+    toast.error(err?.message || "Could not start playback");
+    setPlaying(false);
+  }
+};
+
 
   // "Make available" = tell the browser to fetch & keep the media in its own cache
   const handleMakeAvailableOffline = () => {
     const el = audioRef.current;
     if (!el) return;
-    // Encourage caching
     el.preload = "auto";
-    // Reload to start fetching now (without starting playback)
-    el.load();
-    toast.success('Song is being preloaded (browser cache) ✅');
+    el.load(); // start fetching
+    toast.success("Song is being preloaded (browser cache) ✅");
   };
 
-  // No real way to clear browser cache programmatically, so we just reset hint/UI.
   const handleRemoveOffline = () => {
     const el = audioRef.current;
     if (el) {
@@ -191,7 +185,7 @@ export default function SongCard({
     try {
       setDeleting(true);
       await MusicService.deleteMusic(musicId);
-      onDeleted?.(musicId); // let parent remove this card from the list
+      onDeleted?.(musicId);
     } catch (e: any) {
       alert(e?.message || "Delete failed");
     } finally {
@@ -205,14 +199,29 @@ export default function SongCard({
 
   // After successful save in modal
   const onSaved = (updatedItem: any) => {
-    if (updatedItem?.title) setLocalTitle(updatedItem.title);
-    if ("albumId" in updatedItem) setLocalAlbum(updatedItem.albumId ?? null);
-    if (updatedItem?.coverUrl) setLocalCoverUrl(updatedItem.coverUrl);
-    closeEdit();
-  };
+  if (updatedItem?.title) setLocalTitle(updatedItem.title);
+  if ("albumId" in updatedItem) setLocalAlbum(updatedItem.albumId ?? null);
+  if (updatedItem?.coverUrlSigned) setLocalCoverUrl(updatedItem.coverUrlSigned);
+  if (updatedItem?.genres) setLocalGenres(updatedItem.genres);
+
+  // 🔑 use signed URL if returned
+  if (updatedItem?.fileUrlSigned) {
+    setLocalFileUrl(updatedItem.fileUrlSigned);
+  }
+
+  closeEdit();
+};
 
   const disabled = !localFileUrl;
   const artistsLabel = artists.length ? artists.join(", ") : null;
+
+  // render up to 3 genre badges, +more if needed
+  const genreBadges = useMemo(() => {
+    const list = localGenres || [];
+    const shown = list.slice(0, 3);
+    const rest = list.length - shown.length;
+    return { shown, rest };
+  }, [localGenres]);
 
   return (
     <>
@@ -242,11 +251,15 @@ export default function SongCard({
           )}
 
           <div className="song-card-line song-card-meta">
-            <span className="song-chip">🎧</span>
-            <span className="song-ellipsis">
-              {genre}
-              {localAlbum ? ` · Album: ${localAlbum}` : ""}
-            </span>
+            <span className="song-chip">🏷️</span>
+            <div className="genre-badges" title={localGenres.join(", ")}>
+              {genreBadges.shown.map((g) => (
+                <span className="genre-badge" key={g}>{g}</span>
+              ))}
+              {genreBadges.rest > 0 && <span className="genre-badge genre-badge-muted">+{genreBadges.rest}</span>}
+              {localAlbum && <span className="meta-dot">•</span>}
+              {localAlbum && <span className="album-label">Album: {localAlbum}</span>}
+            </div>
           </div>
         </div>
 
@@ -278,7 +291,7 @@ export default function SongCard({
           </button>
         </div>
 
-        {/* Right CTA rail: Play + Edit/Delete + Preload/Download */}
+        {/* Right CTA rail */}
         <div className="song-card-cta">
           <button
             type="button"
@@ -342,7 +355,7 @@ export default function SongCard({
         </div>
 
         {/* Single audio element (browser cache only) */}
-        <audio ref={audioRef} src={localFileUrl} preload="none" />
+        <audio key={localFileUrl} ref={audioRef} src={localFileUrl} preload="none" />
       </div>
 
       {editOpen && (
@@ -350,6 +363,7 @@ export default function SongCard({
           musicId={musicId}
           initialTitle={localTitle}
           initialAlbumId={localAlbum}
+          initialGenres={localGenres}
           onClose={closeEdit}
           onSaved={onSaved}
         />
@@ -364,17 +378,21 @@ function EditSongModal({
   musicId,
   initialTitle,
   initialAlbumId,
+  initialGenres,
   onClose,
   onSaved,
 }: {
   musicId: string;
   initialTitle: string;
   initialAlbumId: string | null;
+  initialGenres: string[];
   onClose: () => void;
   onSaved: (updatedItem: any) => void;
 }) {
   const [title, setTitle] = useState(initialTitle);
-  const [genresCsv, setGenresCsv] = useState(""); // leave blank to keep unchanged
+
+  // Genres: free-text CSV, prefilled with current genres
+  const [genresCsv, setGenresCsv] = useState((initialGenres ?? []).join(", "));
   const [albumId, setAlbumId] = useState(initialAlbumId ?? "");
   const [clearAlbum, setClearAlbum] = useState(false);
 
@@ -382,6 +400,16 @@ function EditSongModal({
   const [newCover, setNewCover] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const normalize = (arr: string[]) =>
+    Array.from(new Set(arr.map(g => g.trim()).filter(Boolean)));
+
+  const deepEqual = (a: string[], b: string[]) => {
+    if (a.length !== b.length) return false;
+    const A = [...a].sort();
+    const B = [...b].sort();
+    return A.every((v, i) => v === B[i]);
+  };
 
   const toBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -398,22 +426,19 @@ function EditSongModal({
 
       const payload: EditMusicPayload = { musicId };
 
-      // Only include fields that have changed
       if (title.trim() !== initialTitle) payload.title = title.trim();
 
-      const parsedGenres = genresCsv
-        .split(",")
-        .map((g) => g.trim())
-        .filter(Boolean);
-      if (parsedGenres.length > 0) payload.genres = parsedGenres;
+      // Parse genres CSV and send only if changed
+      const parsedGenres = normalize(genresCsv.split(","));
+      if (!deepEqual(parsedGenres, initialGenres ?? [])) {
+        payload.genres = parsedGenres;
+      }
 
       if (clearAlbum) {
         payload.albumId = null;
       } else {
         const trimmed = albumId.trim();
-        if (trimmed && trimmed !== (initialAlbumId ?? "")) {
-          payload.albumId = trimmed;
-        }
+        if (trimmed && trimmed !== (initialAlbumId ?? "")) payload.albumId = trimmed;
       }
 
       if (newAudio) {
@@ -435,37 +460,62 @@ function EditSongModal({
     }
   };
 
+  const onBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") onClose();
+  };
+
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal-card">
-        <div className="modal-header">
-          <h5 className="modal-title">Edit song</h5>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+    <div
+      className="se-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={onBackdrop}
+      onKeyDown={onKeyDown}
+      tabIndex={-1}
+    >
+      <div className="se-modal" role="document">
+        <div className="se-modal__header">
+          <h5 className="se-modal__title">Edit song</h5>
+          <button className="se-modal__close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
 
-        <div className="modal-body">
-          <label className="form-label">Title</label>
-          <input
-            className="form-control"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+        <div className="se-modal__body">
+          <div className="se-form-field">
+            <label className="se-form-label" htmlFor="edit-title">Title</label>
+            <input
+              id="edit-title"
+              className="se-form-control"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
 
-          <label className="form-label">Genres (comma-separated, leave blank to keep)</label>
-          <input
-            className="form-control"
-            placeholder="rock, pop"
-            value={genresCsv}
-            onChange={(e) => setGenresCsv(e.target.value)}
-          />
+          {/* Genres: free text, prefilled */}
+          <div className="se-form-field">
+            <label className="se-form-label" htmlFor="edit-genres">
+              Genres (comma-separated)
+            </label>
+            <input
+              id="edit-genres"
+              className="se-form-control"
+              placeholder="rock, pop"
+              value={genresCsv}
+              onChange={(e) => setGenresCsv(e.target.value)}
+            />
+          </div>
 
-          <div className="row-flex">
-            <div style={{ flex: 1 }}>
-              <label className="form-label">Album ID (optional)</label>
+          <div className="se-row">
+            <div className="se-form-field se-flex-1">
+              <label className="se-form-label" htmlFor="edit-album">Album ID (optional)</label>
               <input
-                className="form-control"
+                id="edit-album"
+                className="se-form-control"
                 placeholder="Leave empty to keep"
                 value={albumId}
                 onChange={(e) => {
@@ -475,11 +525,11 @@ function EditSongModal({
                 disabled={clearAlbum}
               />
             </div>
-            <div className="checkbox-col">
-              <label className="form-check">
+            <div className="se-checkbox-col">
+              <label className="se-form-check">
                 <input
                   type="checkbox"
-                  className="form-check-input"
+                  className="se-form-check-input"
                   checked={clearAlbum}
                   onChange={(e) => setClearAlbum(e.target.checked)}
                 />
@@ -488,30 +538,36 @@ function EditSongModal({
             </div>
           </div>
 
-          <label className="form-label">Replace audio (optional)</label>
-          <input
-            type="file"
-            accept="audio/*"
-            className="form-control"
-            onChange={(e) => setNewAudio(e.target.files?.[0] || null)}
-          />
+          <div className="se-form-field">
+            <label className="se-form-label" htmlFor="edit-audio">Replace audio (optional)</label>
+            <input
+              id="edit-audio"
+              type="file"
+              accept="audio/*"
+              className="se-form-control"
+              onChange={(e) => setNewAudio(e.target.files?.[0] || null)}
+            />
+          </div>
 
-          <label className="form-label">Replace cover (optional)</label>
-          <input
-            type="file"
-            accept="image/*"
-            className="form-control"
-            onChange={(e) => setNewCover(e.target.files?.[0] || null)}
-          />
+          <div className="se-form-field">
+            <label className="se-form-label" htmlFor="edit-cover">Replace cover (optional)</label>
+            <input
+              id="edit-cover"
+              type="file"
+              accept="image/*"
+              className="se-form-control"
+              onChange={(e) => setNewCover(e.target.files?.[0] || null)}
+            />
+          </div>
 
-          {err && <div className="text-danger mt-2">{err}</div>}
+          {err && <div className="se-text-danger se-mt-2">{err}</div>}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn btn-light" onClick={onClose} disabled={saving}>
+        <div className="se-modal__footer">
+          <button className="se-btn se-btn-light" onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          <button className="se-btn se-btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? "Saving…" : "Save changes"}
           </button>
         </div>

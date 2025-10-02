@@ -1,4 +1,3 @@
-// src/pages/AlbumPage.tsx (or AlbumDetailPage.tsx)
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./AlbumPage.css";
@@ -44,10 +43,8 @@ export default function AlbumDetailPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  const canFetch = useMemo(
-    () => !!resolvedGenre && musicIds.length > 0,
-    [resolvedGenre, musicIds]
-  );
+  // ✅ Only require IDs to fetch. Genre is display-only here.
+  const canFetch = useMemo(() => musicIds.length > 0, [musicIds]);
 
   useEffect(() => {
     (async () => {
@@ -67,7 +64,8 @@ export default function AlbumDetailPage() {
         setLoading(false);
       }
     })();
-  }, [albumId, canFetch, resolvedGenre, musicIds]);
+    // 👇 no resolvedGenre dependency; it shouldn't trigger data reloads
+  }, [albumId, canFetch, musicIds]);
 
   // Remove from both songs[] and musicIds[]; keep sessionStorage in sync
   const handleDeleted = (removedId: string) => {
@@ -118,13 +116,12 @@ export default function AlbumDetailPage() {
               key={s.musicId}
               musicId={s.musicId}
               title={s.title}
-              // Use the album’s resolved genre (consistent with album browse)
-              genre={resolvedGenre}
+              genres={s.genres ?? []}          
               album={s.albumId ?? undefined}
               fileUrl={s.fileUrl ?? ""}
               coverUrl={s.coverUrl}
-              initialRate={s.rate ?? null} // rate now included from backend
-              onDeleted={handleDeleted}  // keep UI in sync after delete
+              initialRate={s.rate ?? null}
+              onDeleted={handleDeleted}
             />
           ))}
         </div>

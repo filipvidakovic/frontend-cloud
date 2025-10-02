@@ -23,6 +23,8 @@ export interface EditMusicPayload {
   fileName?: string | null;    // required when sending fileContent
   fileContent?: string | null; // base64 (no data: prefix)
   coverImage?: string | null;  // base64 (no data: prefix)
+  fileUrlSigned?: string |null;
+  coverUrlSigned?: string | null;
 }
 
 function getJwt() {
