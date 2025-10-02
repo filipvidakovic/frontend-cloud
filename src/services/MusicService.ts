@@ -23,6 +23,8 @@ export interface EditMusicPayload {
   fileName?: string | null; // required when sending fileContent
   fileContent?: string | null; // base64 (no data: prefix)
   coverImage?: string | null; // base64 (no data: prefix)
+  fileUrlSigned?: string | null;
+  coverUrlSigned?: string | null;
 }
 
 function getJwt() {
@@ -190,6 +192,26 @@ class MusicService {
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Failed to fetch songs");
     }
+  }
+  // async startTranscription (songId: string) {
+  //   const token = localStorage.getItem("token");
+  //   const res = await axios.post(
+  //     `${API_URL}/transcriptions/start`,
+  //     { songId },
+  //     {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         ...(token && { Authorization: `Bearer ${token}` }),
+  //       },
+  //     }
+  //   );
+  //   return res.data;
+  // }
+
+  async getTranscription(musicId: string) {
+    const res = await fetch(`/api/transcriptions/${musicId}`);
+    if (!res.ok) throw new Error("Failed to fetch transcription");
+    return res.json();
   }
 }
 
