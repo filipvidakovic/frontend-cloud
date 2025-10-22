@@ -18,16 +18,33 @@ export interface RegisterData {
 const API_URL = import.meta.env.VITE_API_URL;
 
 class AuthService {
-  async login(data: LoginData) {
+async login(data: LoginData) {
     try {
+      localStorage.clear();
+
       const response = await axios.post(`${API_URL}/login`, data);
-      localStorage.setItem("token", response.data.IdToken);
-      const claims: any = jwtDecode(response.data.IdToken);
-      localStorage.setItem("username", claims.username!);
-      localStorage.setItem("userId", claims.sub!);
-      return response.data;
+      const result = response.data;
+
+      console.log(result); // shows access_token, refresh_token, id_token, role
+
+      // Save tokens
+      localStorage.setItem("token", result.id_token);
+      localStorage.setItem("accessToken", result.access_token);
+      if (result.refresh_token)
+        localStorage.setItem("refreshToken", result.refresh_token);
+      if (result.role)
+        localStorage.setItem("role", result.role);
+
+      // Decode ID token to get user info
+      const claims: any = jwtDecode(result.id_token);
+      localStorage.setItem("username", claims["cognito:username"]);
+      localStorage.setItem("userId", claims.sub);
+
+      console.log("User logged in:", claims["cognito:username"]);
+
+      return result;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Login failed");
+      throw new Error(error.response?.data?.error || "Login failed");
     }
   }
 
@@ -41,7 +58,7 @@ class AuthService {
   }
 
   logout() {
-    localStorage.removeItem("token");
+    localStorage.clear()
   }
 
   getToken() {
@@ -70,6 +87,10 @@ class AuthService {
         error.response?.data?.message || "Failed to fetch user info"
       );
     }
+  }
+
+  getRole(): string | null {
+    return localStorage.getItem("role");
   }
 }
 
