@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import AlbumList from "../components/album/AlbumList";
-import ArtistList from "../components/artist/ArtistList";
+import SongCard from "../components/song/SongCard";
+import type { SongCardProps } from "../components/song/SongCard";
 import type { AlbumCardProps } from "../models/Album";
-import type { ArtistCardProps } from "../models/Artist";
 import UserService from "../services/UserService";
+
 const FeedPage: React.FC = () => {
-  const [songs, setSongs] = useState<AlbumCardProps[]>([]);
-  const [artists, setArtists] = useState<ArtistCardProps[]>([]);
+  const [albums, setAlbums] = useState<AlbumCardProps[]>([]);
+  const [songs, setSongs] = useState<SongCardProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,15 +17,17 @@ const FeedPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const { songs: songsRes, artists: artistsRes } =
-          await UserService.getFeed();
+        const res = await UserService.getFeed();
+        console.log("Raw feed response:", res);
+
         if (cancel) return;
-        setSongs(songsRes || []);
-        setArtists(artistsRes || []);
+
+        setSongs(res.songs || []);
+        setAlbums(res.albums || []);
       } catch (err: any) {
         if (cancel) return;
-        console.error("Error fetching feed:", err);
-        setError("Failed to fetch recommendations. Please try again.");
+        console.error("Error fetching feed:", err.response || err);
+        setError("Failed to fetch feed. Please try again.");
       } finally {
         if (!cancel) setLoading(false);
       }
@@ -42,24 +45,34 @@ const FeedPage: React.FC = () => {
         subscriptions 🎶✨
       </p>
 
-      {loading && <p className="text-center">Loading recommendations...</p>}
+      {loading && <p className="text-center">Loading feed...</p>}
       {error && <p className="text-danger text-center">{error}</p>}
 
+      {/* SONGS FIRST */}
       {!loading && songs.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Recommended Songs</h2>
-          <AlbumList albums={songs} genre="feed" />
+          <div className="container">
+            <div className="row">
+              {songs.map((song) => (
+                <div key={song.musicId} className="col-md-4 mb-4">
+                  <SongCard {...song} showActions={false} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
-      {!loading && artists.length > 0 && (
+      {/* ALBUMS AFTER SONGS */}
+      {!loading && albums.length > 0 && (
         <div className="mb-5">
-          <h2 className="mb-3">Recommended Artists</h2>
-          <ArtistList artists={artists} />
+          <h2 className="mb-3">Albums</h2>
+          <AlbumList albums={albums} genre="" />
         </div>
       )}
 
-      {!loading && songs.length === 0 && artists.length === 0 && !error && (
+      {!loading && songs.length === 0 && albums.length === 0 && !error && (
         <p className="text-muted text-center mt-5">
           No recommendations yet. Start listening, rating, and subscribing to
           get personalized suggestions!

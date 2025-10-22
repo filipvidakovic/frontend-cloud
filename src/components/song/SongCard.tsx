@@ -5,18 +5,21 @@ import "./SongCard.css";
 import UserService from "../../services/UserService";
 import RateService from "../../services/RateService";
 import { toast } from "react-toastify";
-import MusicService, { type EditMusicPayload } from "../../services/MusicService";
+import MusicService, {
+  type EditMusicPayload,
+} from "../../services/MusicService";
 
 export interface SongCardProps {
   musicId: string;
   title: string;
-  genres: string[];                 // current song genres (array)
+  genres: string[]; // current song genres (array)
   album?: string | null;
   fileUrl: string;
   coverUrl?: string | null;
   artists?: string[];
   initialRate?: "love" | "like" | "dislike" | null;
   onDeleted?: (musicId: string) => void; // notify parent after delete
+  showActions?: boolean;
   onPlaySelected?: (musicId: string) => void;
 }
 
@@ -30,6 +33,7 @@ export default function SongCard({
   artists = [],
   initialRate = null,
   onDeleted,
+  showActions = true,
   onPlaySelected,
 }: SongCardProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -37,13 +41,17 @@ export default function SongCard({
   // local state so the card can reflect updates without reloading the list
   const [localTitle, setLocalTitle] = useState(title);
   const [localAlbum, setLocalAlbum] = useState<string | null>(album ?? null);
-  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(coverUrl ?? null);
+  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(
+    coverUrl ?? null
+  );
   const [localFileUrl, setLocalFileUrl] = useState(fileUrl); // <-- make this mutable
   const [localGenres, setLocalGenres] = useState<string[]>(genres ?? []);
 
   const [playing, setPlaying] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(initialRate);
+  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(
+    initialRate
+  );
   const [editOpen, setEditOpen] = useState(false);
 
   // browser-cache indicator (best-effort)
@@ -64,7 +72,8 @@ export default function SongCard({
       const ranges = el.buffered;
       if (!ranges || ranges.length === 0) return false;
       let end = 0;
-      for (let i = 0; i < ranges.length; i++) end = Math.max(end, ranges.end(i));
+      for (let i = 0; i < ranges.length; i++)
+        end = Math.max(end, ranges.end(i));
       const epsilon = 0.5; // seconds tolerance
       return end >= el.duration - epsilon;
     } catch {
@@ -139,7 +148,8 @@ export default function SongCard({
     const el = audioRef.current;
     if (!el) return;
     el.preload = "auto";
-    el.load(); // start fetching
+    // Reload to start fetching now (without starting playback)
+    el.load();
     toast.success("Song is being preloaded (browser cache) ✅");
   };
 
@@ -204,18 +214,19 @@ export default function SongCard({
 
   // After successful save in modal
   const onSaved = (updatedItem: any) => {
-  if (updatedItem?.title) setLocalTitle(updatedItem.title);
-  if ("albumId" in updatedItem) setLocalAlbum(updatedItem.albumId ?? null);
-  if (updatedItem?.coverUrlSigned) setLocalCoverUrl(updatedItem.coverUrlSigned);
-  if (updatedItem?.genres) setLocalGenres(updatedItem.genres);
+    if (updatedItem?.title) setLocalTitle(updatedItem.title);
+    if ("albumId" in updatedItem) setLocalAlbum(updatedItem.albumId ?? null);
+    if (updatedItem?.coverUrlSigned)
+      setLocalCoverUrl(updatedItem.coverUrlSigned);
+    if (updatedItem?.genres) setLocalGenres(updatedItem.genres);
 
-  // 🔑 use signed URL if returned
-  if (updatedItem?.fileUrlSigned) {
-    setLocalFileUrl(updatedItem.fileUrlSigned);
-  }
+    // 🔑 use signed URL if returned
+    if (updatedItem?.fileUrlSigned) {
+      setLocalFileUrl(updatedItem.fileUrlSigned);
+    }
 
-  closeEdit();
-};
+    closeEdit();
+  };
 
   const disabled = !localFileUrl;
   const artistsLabel = artists.length ? artists.join(", ") : null;
@@ -245,11 +256,18 @@ export default function SongCard({
         <div className="song-card-content">
           <h6 className="song-card-title">
             {localTitle}{" "}
-            {preloaded && <span className="song-chip" title="Likely cached in browser">📦</span>}
+            {preloaded && (
+              <span className="song-chip" title="Likely cached in browser">
+                📦
+              </span>
+            )}
           </h6>
 
           {artistsLabel && (
-            <div className="song-card-line song-card-artists" title={artistsLabel}>
+            <div
+              className="song-card-line song-card-artists"
+              title={artistsLabel}
+            >
               <span className="song-chip">🎤</span>
               <span className="song-ellipsis">{artistsLabel}</span>
             </div>
@@ -259,11 +277,19 @@ export default function SongCard({
             <span className="song-chip">🏷️</span>
             <div className="genre-badges" title={localGenres.join(", ")}>
               {genreBadges.shown.map((g) => (
-                <span className="genre-badge" key={g}>{g}</span>
+                <span className="genre-badge" key={g}>
+                  {g}
+                </span>
               ))}
-              {genreBadges.rest > 0 && <span className="genre-badge genre-badge-muted">+{genreBadges.rest}</span>}
+              {genreBadges.rest > 0 && (
+                <span className="genre-badge genre-badge-muted">
+                  +{genreBadges.rest}
+                </span>
+              )}
               {localAlbum && <span className="meta-dot">•</span>}
-              {localAlbum && <span className="album-label">Album: {localAlbum}</span>}
+              {localAlbum && (
+                <span className="album-label">Album: {localAlbum}</span>
+              )}
             </div>
           </div>
         </div>
@@ -309,61 +335,68 @@ export default function SongCard({
             {playing ? "⏸" : "▶️"}
           </button>
 
-          <div className="song-card-actions" aria-label="Song actions">
-            <button
-              type="button"
-              className="song-action-btn"
-              onClick={handleDownload}
-              title="Download file"
-            >
-              ⬇️
-            </button>
-
-            {preloaded ? (
+          {showActions && ( // 👈 only show if true
+            <div className="song-card-actions" aria-label="Song actions">
               <button
                 type="button"
                 className="song-action-btn"
-                onClick={handleRemoveOffline}
-                title="Reset preload hint"
+                onClick={handleDownload}
+                title="Download file"
               >
-                🗑️📦
+                ⬇️
               </button>
-            ) : (
+
+              {preloaded ? (
+                <button
+                  type="button"
+                  className="song-action-btn"
+                  onClick={handleRemoveOffline}
+                  title="Reset preload hint"
+                >
+                  🗑️📦
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="song-action-btn"
+                  onClick={handleMakeAvailableOffline}
+                  title='Make available "offline" (browser cache)'
+                >
+                  📥
+                </button>
+              )}
+
               <button
                 type="button"
                 className="song-action-btn"
-                onClick={handleMakeAvailableOffline}
-                title='Make available "offline" (browser cache)'
+                onClick={openEdit}
+                title="Edit song"
               >
-                📥
+                ✏️
               </button>
-            )}
-
-            <button
-              type="button"
-              className="song-action-btn"
-              onClick={openEdit}
-              title="Edit song"
-            >
-              ✏️
-            </button>
-            <button
-              type="button"
-              className="song-action-btn danger"
-              onClick={handleDelete}
-              disabled={deleting}
-              title={deleting ? "Deleting…" : "Delete song"}
-            >
-              {deleting ? "…" : "🗑️"}
-            </button>
-          </div>
+              <button
+                type="button"
+                className="song-action-btn danger"
+                onClick={handleDelete}
+                disabled={deleting}
+                title={deleting ? "Deleting…" : "Delete song"}
+              >
+                {deleting ? "…" : "🗑️"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Single audio element (browser cache only) */}
-        <audio key={localFileUrl} ref={audioRef} src={localFileUrl} preload="none" />
+        <audio
+          key={localFileUrl}
+          ref={audioRef}
+          src={localFileUrl}
+          preload="none"
+        />
       </div>
 
-      {editOpen && (
+      {showActions && editOpen && (
         <EditSongModal
           musicId={musicId}
           initialTitle={localTitle}
@@ -407,7 +440,7 @@ function EditSongModal({
   const [err, setErr] = useState<string | null>(null);
 
   const normalize = (arr: string[]) =>
-    Array.from(new Set(arr.map(g => g.trim()).filter(Boolean)));
+    Array.from(new Set(arr.map((g) => g.trim()).filter(Boolean)));
 
   const deepEqual = (a: string[], b: string[]) => {
     if (a.length !== b.length) return false;
@@ -443,7 +476,8 @@ function EditSongModal({
         payload.albumId = null;
       } else {
         const trimmed = albumId.trim();
-        if (trimmed && trimmed !== (initialAlbumId ?? "")) payload.albumId = trimmed;
+        if (trimmed && trimmed !== (initialAlbumId ?? ""))
+          payload.albumId = trimmed;
       }
 
       if (newAudio) {
@@ -485,14 +519,20 @@ function EditSongModal({
       <div className="se-modal" role="document">
         <div className="se-modal__header">
           <h5 className="se-modal__title">Edit song</h5>
-          <button className="se-modal__close" onClick={onClose} aria-label="Close">
+          <button
+            className="se-modal__close"
+            onClick={onClose}
+            aria-label="Close"
+          >
             ×
           </button>
         </div>
 
         <div className="se-modal__body">
           <div className="se-form-field">
-            <label className="se-form-label" htmlFor="edit-title">Title</label>
+            <label className="se-form-label" htmlFor="edit-title">
+              Title
+            </label>
             <input
               id="edit-title"
               className="se-form-control"
@@ -517,7 +557,9 @@ function EditSongModal({
 
           <div className="se-row">
             <div className="se-form-field se-flex-1">
-              <label className="se-form-label" htmlFor="edit-album">Album ID (optional)</label>
+              <label className="se-form-label" htmlFor="edit-album">
+                Album ID (optional)
+              </label>
               <input
                 id="edit-album"
                 className="se-form-control"
@@ -544,7 +586,9 @@ function EditSongModal({
           </div>
 
           <div className="se-form-field">
-            <label className="se-form-label" htmlFor="edit-audio">Replace audio (optional)</label>
+            <label className="se-form-label" htmlFor="edit-audio">
+              Replace audio (optional)
+            </label>
             <input
               id="edit-audio"
               type="file"
@@ -555,7 +599,9 @@ function EditSongModal({
           </div>
 
           <div className="se-form-field">
-            <label className="se-form-label" htmlFor="edit-cover">Replace cover (optional)</label>
+            <label className="se-form-label" htmlFor="edit-cover">
+              Replace cover (optional)
+            </label>
             <input
               id="edit-cover"
               type="file"
@@ -569,10 +615,18 @@ function EditSongModal({
         </div>
 
         <div className="se-modal__footer">
-          <button className="se-btn se-btn-light" onClick={onClose} disabled={saving}>
+          <button
+            className="se-btn se-btn-light"
+            onClick={onClose}
+            disabled={saving}
+          >
             Cancel
           </button>
-          <button className="se-btn se-btn-primary" onClick={handleSave} disabled={saving}>
+          <button
+            className="se-btn se-btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+          >
             {saving ? "Saving…" : "Save changes"}
           </button>
         </div>

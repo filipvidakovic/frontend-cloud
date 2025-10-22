@@ -14,6 +14,7 @@ const DiscoverPage: React.FC = () => {
   const navType = useNavigationType();
 
   const urlGenre = searchParams.get("genre") || "";
+  const [searchInput, setSearchInput] = useState(urlGenre);
   const [genre, setGenre] = useState(urlGenre);
 
   const [albums, setAlbums] = useState<AlbumCardProps[]>([]);
@@ -79,7 +80,7 @@ const DiscoverPage: React.FC = () => {
   }, [urlGenre, cacheKey, navType]);
 
   const handleSearch = async () => {
-    const g = genre.trim();
+    const g = searchInput.trim();
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
       if (g) p.set("genre", g);
@@ -91,6 +92,7 @@ const DiscoverPage: React.FC = () => {
       setAlbums([]);
       setArtists([]);
       setError(null);
+      setGenre("");
       return;
     }
 
@@ -103,6 +105,7 @@ const DiscoverPage: React.FC = () => {
       ]);
       setAlbums(albumsRes);
       setArtists(artistsRes);
+      setGenre(g);
       sessionStorage.setItem(
         `discover:genre=${g}`,
         JSON.stringify({ albums: albumsRes, artists: artistsRes })
@@ -124,9 +127,9 @@ const DiscoverPage: React.FC = () => {
     } catch (err) {
       console.error("Error subscribing to genre:", err);
     }
-  }
+  };
   const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === "Enter" && genre.trim() && !loading) {
+    if (e.key === "Enter" && searchInput.trim() && !loading) {
       handleSearch();
     }
   };
@@ -143,14 +146,14 @@ const DiscoverPage: React.FC = () => {
           type="text"
           className="form-control genre-input"
           placeholder="Enter genre..."
-          value={genre}
-          onChange={(e) => setGenre(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={onKeyDown}
         />
         <button
           className="btn btn-primary"
           onClick={handleSearch}
-          disabled={loading || !genre.trim()}
+          disabled={loading || !searchInput.trim()}
         >
           {loading ? "Searching..." : "Search"}
         </button>
@@ -168,7 +171,7 @@ const DiscoverPage: React.FC = () => {
       {!loading && albums.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3">Albums</h2>
-          {albums &&<AlbumList albums={albums} genre={genre} />}
+          {albums && <AlbumList albums={albums} genre={genre} />}
         </div>
       )}
 
