@@ -2,7 +2,11 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthService, { type LoginData } from "../../services/AuthService";
 
-export default function Login() {
+interface LoginProps {
+  onLoginSuccess?: () => void;
+}
+
+export default function Login({ onLoginSuccess }: LoginProps) {
   const [form, setForm] = useState<LoginData>({ username: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -14,21 +18,33 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
     try {
-      await AuthService.login(form);
-      navigate("/"); // Redirect to home after login
+      const result = await AuthService.login(form);
+
+      // 🔔 Immediately update App state (so navbar updates without refresh)
+      if (onLoginSuccess) onLoginSuccess();
+
+      // Optional: Redirect based on role
+      if (result.role === "admin") {
+        navigate("/new-artist");
+      } else {
+        navigate("/feed");
+      }
+
     } catch (err: any) {
       setError(err.message);
     }
   };
 
- return (
+  return (
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
           <div className="card shadow-lg p-4">
             <h2 className="text-center mb-4">Login</h2>
             {error && <div className="alert alert-danger">{error}</div>}
+
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label">Username</label>

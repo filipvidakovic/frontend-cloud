@@ -58,7 +58,7 @@ async login(data: LoginData) {
   }
 
   logout() {
-    localStorage.removeItem("token");
+    localStorage.clear()
   }
 
   getToken() {
@@ -87,6 +87,10 @@ async login(data: LoginData) {
         error.response?.data?.message || "Failed to fetch user info"
       );
     }
+  }
+
+  getRole(): string | null {
+    return localStorage.getItem("role");
   }
 }
 
