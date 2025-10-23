@@ -6,6 +6,7 @@ import SubscribeService from "../../services/SubscribeService";
 import ArtistService from "../../services/ArtistService";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom"; // 💥 NOVO: Uvoz useNavigate
+import AuthService from "../../services/AuthService";
 
 type Props = ArtistCardProps & {
   canEdit?: boolean;
@@ -24,9 +25,10 @@ const ArtistCard: React.FC<Props> = ({
   onEdit,
   onDeleted,
 }) => {
-  const navigate = useNavigate(); // 💥 Korišćenje kuke za navigaciju
-
-  // ---- local displayed values (what the card shows) ----
+  const navigate = useNavigate(); 
+  const user = AuthService.getRole();
+  const isAdmin = user === "admin";
+  
   const [view, setView] = useState({
     name: name || "",
     lastname: lastname || "",
@@ -178,7 +180,7 @@ const ArtistCard: React.FC<Props> = ({
               )}
             </div>
 
-            {canEdit && (
+            {isAdmin && (
               <div className="btn-toolbar gap-2">
                 <button
                   type="button"

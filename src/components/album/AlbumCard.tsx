@@ -5,6 +5,7 @@ import "./AlbumCard.css";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import MusicService from "../../services/MusicService";
+import AuthService from "../../services/AuthService";
 
 type Props = AlbumCardProps & {
   onDeleted?: (albumId: string) => void; // 🆕 optional callback
@@ -26,6 +27,9 @@ const AlbumCard: React.FC<Props> = ({
       );
     } catch {}
   };
+
+    const user = AuthService.getRole();
+    const isAdmin = user === "admin";
 
   const trackCount = Array.isArray(musicIds)
     ? musicIds.length
@@ -77,13 +81,14 @@ const handleDelete = async (e: React.MouseEvent) => {
           <div className="album-info">
             <div className="album-header">
               <h5 className="album-title">{albumId}</h5>
-              <button
+              {isAdmin &&(<> <button
                 className="album-delete-btn"
                 title="Delete album"
                 onClick={handleDelete}
               >
                 Delete
-              </button>
+              </button></>)}
+             
             </div>
 
             <div className="album-meta">

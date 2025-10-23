@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import MusicService, { type EditMusicPayload } from "../../services/MusicService";
 import { useOfflineTrack } from "../../hooks/useOfflineTrack";
 import { OfflineAudioStore } from "../../services/OfflineAudioStore";
+import AuthService from "../../services/AuthService";
 
 export interface SongCardProps {
   musicId: string;
@@ -48,6 +49,9 @@ export default function SongCard({
   const [deleting, setDeleting] = useState(false);
   const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(initialRate);
   const [editOpen, setEditOpen] = useState(false);
+
+  const user = AuthService.getRole();
+  const isAdmin = user === "admin";
 
   // ✅ Offline-first: prefer blob URL from IndexedDB; fallback to network fileUrl
   const { url, cached, loading: offlineBusy, error: offlineErr, makeAvailable, removeAvailable } =
@@ -351,7 +355,8 @@ export default function SongCard({
                   {offlineBusy ? "…" : "📥"}
                 </button>
               )}
-
+              {isAdmin && (
+                <>
               <button
                 type="button"
                 className="song-action-btn"
@@ -369,6 +374,8 @@ export default function SongCard({
               >
                 {deleting ? "…" : "🗑️"}
               </button>
+              </>
+    )}
             </div>
           )}
         </div>
