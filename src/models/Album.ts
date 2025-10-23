@@ -7,4 +7,5 @@ export interface AlbumCardProps {
 }
 export interface AlbumListProps {
   albums: AlbumCardProps[];
+  onDeleted?: (albumId: string) => void; 
 }

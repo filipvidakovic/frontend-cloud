@@ -14,7 +14,7 @@ import UploadAlbumPage from "./pages/UploadAlbumPage";
 import UploadMusicPage from "./pages/UploadMusicPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import ArtistSongsPage from "./pages/ArtistSongsPage";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(AuthService.isAuthenticated());
   const [role, setRole] = useState<string | null>(AuthService.getRole());
@@ -112,6 +112,7 @@ function App() {
               path="/update-music/:genre/:musicId"
               element={isAdmin ? <UpdateMusicPage /> : <Navigate to="/" replace />}
             />
+            <Route path="/artists/:artistId/songs" element={<ArtistSongsPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<h2 className="text-center">Page Not Found</h2>} />

@@ -8,7 +8,7 @@ export interface ArtistListProps {
   onUpdated?: (artistId: string, u: Partial<ArtistCardProps>) => void;  
 }
 
-const ArtistList: React.FC<ArtistListProps> = ({ artists }) => {
+const ArtistList: React.FC<ArtistListProps> = ({ artists, onDeleted }) => {
   if (!Array.isArray(artists)) {
     return <p className="text-muted">No artists found.</p>;
   }
@@ -22,7 +22,7 @@ const ArtistList: React.FC<ArtistListProps> = ({ artists }) => {
       <div className="row">
         {artists.map((artist) => (
           <div key={artist.artistId} className="col-md-4 mb-4">
-            <ArtistCard {...artist} />
+            <ArtistCard {...artist} onDeleted={onDeleted} />
           </div>
         ))}
       </div>
