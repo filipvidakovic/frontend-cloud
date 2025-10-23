@@ -213,6 +213,34 @@ class MusicService {
     if (!res.ok) throw new Error("Failed to fetch transcription");
     return res.json();
   }
+  // src/services/MusicService.ts (add/replace this method)
+
+// src/services/MusicService.ts
+async getSignedGetUrl(musicId: string): Promise<string> {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("Not authenticated");
+
+  const u = new URL(`${API_URL}/music/signedGet`);
+  u.searchParams.set("musicId", musicId);
+
+  // NOTE: only Authorization; no Content-Type on GET to avoid preflight
+  const res = await fetch(u.toString(), {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`signedGet failed: ${res.status} ${t}`);
+  }
+  const data = await res.json();
+  // Lambda returns { "fileUrlSigned": "https://s3..." }
+  const signed = data?.fileUrlSigned ?? data?.url;
+  if (!signed) throw new Error("signedGet: response missing URL");
+  return signed;
+}
+
+
 }
 
 export default new MusicService();

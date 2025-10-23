@@ -5,16 +5,16 @@ import "./SongCard.css";
 import UserService from "../../services/UserService";
 import RateService from "../../services/RateService";
 import { toast } from "react-toastify";
-import MusicService, {
-  type EditMusicPayload,
-} from "../../services/MusicService";
+import MusicService, { type EditMusicPayload } from "../../services/MusicService";
+import { useOfflineTrack } from "../../hooks/useOfflineTrack";
+import { OfflineAudioStore } from "../../services/OfflineAudioStore";
 
 export interface SongCardProps {
   musicId: string;
   title: string;
   genres: string[]; // current song genres (array)
   album?: string | null;
-  fileUrl: string;
+  fileUrl: string; // network URL (signed) if present
   coverUrl?: string | null;
   artists?: string[];
   initialRate?: "love" | "like" | "dislike" | null;
@@ -41,84 +41,51 @@ export default function SongCard({
   // local state so the card can reflect updates without reloading the list
   const [localTitle, setLocalTitle] = useState(title);
   const [localAlbum, setLocalAlbum] = useState<string | null>(album ?? null);
-  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(
-    coverUrl ?? null
-  );
-  const [localFileUrl, setLocalFileUrl] = useState(fileUrl); // <-- make this mutable
+  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(coverUrl ?? null);
   const [localGenres, setLocalGenres] = useState<string[]>(genres ?? []);
 
   const [playing, setPlaying] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(
-    initialRate
-  );
+  const [rate, setRate] = useState<"love" | "like" | "dislike" | null>(initialRate);
   const [editOpen, setEditOpen] = useState(false);
 
-  // browser-cache indicator (best-effort)
-  const [preloaded, setPreloaded] = useState<boolean>(false);
+  // ✅ Offline-first: prefer blob URL from IndexedDB; fallback to network fileUrl
+  const { url, cached, loading: offlineBusy, error: offlineErr, makeAvailable, removeAvailable } =
+    useOfflineTrack(musicId, fileUrl);
 
   // keep in sync if parent updates props later
   useEffect(() => setLocalGenres(genres ?? []), [genres]);
   useEffect(() => setLocalCoverUrl(coverUrl ?? null), [coverUrl]);
   useEffect(() => setLocalTitle(title), [title]);
   useEffect(() => setLocalAlbum(album ?? null), [album]);
-  useEffect(() => setLocalFileUrl(fileUrl), [fileUrl]);
 
-  // ---- Helpers to detect "fully buffered" (best-effort) ----
-  const computePreloaded = (el: HTMLAudioElement | null) => {
-    if (!el) return false;
-    try {
-      if (!isFinite(el.duration) || el.duration <= 0) return false;
-      const ranges = el.buffered;
-      if (!ranges || ranges.length === 0) return false;
-      let end = 0;
-      for (let i = 0; i < ranges.length; i++)
-        end = Math.max(end, ranges.end(i));
-      const epsilon = 0.5; // seconds tolerance
-      return end >= el.duration - epsilon;
-    } catch {
-      return false;
-    }
-  };
-
+  // Basic play/pause wiring
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
 
-    const update = () => setPreloaded(computePreloaded(el));
     const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => setPlaying(false);
+    const onPauseOrEnd = () => setPlaying(false);
     const onError = () => {
       console.error("Audio error", el.error, { src: el.currentSrc });
       setPlaying(false);
     };
 
-    el.addEventListener("loadedmetadata", update);
-    el.addEventListener("progress", update);
-    el.addEventListener("canplaythrough", update);
-    const onEmptied = () => setPreloaded(false);
-    el.addEventListener("emptied", onEmptied);
-
     el.addEventListener("play", onPlay);
-    el.addEventListener("pause", onPause);
-    el.addEventListener("ended", onEnded);
+    el.addEventListener("pause", onPauseOrEnd);
+    el.addEventListener("ended", onPauseOrEnd);
     el.addEventListener("error", onError);
 
-    update();
+    // reflect current state after src swap
     setPlaying(!el.paused && !el.ended);
 
     return () => {
-      el.removeEventListener("loadedmetadata", update);
-      el.removeEventListener("progress", update);
-      el.removeEventListener("canplaythrough", update);
-      el.removeEventListener("emptied", onEmptied);
       el.removeEventListener("play", onPlay);
-      el.removeEventListener("pause", onPause);
-      el.removeEventListener("ended", onEnded);
+      el.removeEventListener("pause", onPauseOrEnd);
+      el.removeEventListener("ended", onPauseOrEnd);
       el.removeEventListener("error", onError);
     };
-  }, [localFileUrl]);
+  }, [url]);
 
   // Play/pause
   const togglePlay = async () => {
@@ -143,29 +110,38 @@ export default function SongCard({
     }
   };
 
-  // "Make available" = tell the browser to fetch & keep the media in its own cache
-  const handleMakeAvailableOffline = () => {
-    const el = audioRef.current;
-    if (!el) return;
-    el.preload = "auto";
-    // Reload to start fetching now (without starting playback)
-    el.load();
-    toast.success("Song is being preloaded (browser cache) ✅");
-  };
-
-  const handleRemoveOffline = () => {
-    const el = audioRef.current;
-    if (el) {
-      el.preload = "none";
-      el.load();
+  // 📥 Save full file to IndexedDB (uses presigned GET under the hood)
+  const handleMakeAvailableOffline = async () => {
+    try {
+      await makeAvailable(); // prefer using the current URL if already signed
+      toast.success("Saved for offline (IndexedDB) ✅");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to save offline");
     }
-    setPreloaded(false);
-    toast.info("Preload hint cleared (browser may still keep the file).");
   };
 
-  // Download via MusicService (302 to S3)
+  // 🗑️📦 Remove from IndexedDB
+  const handleRemoveOffline = async () => {
+    await removeAvailable();
+    toast.info("Removed from offline cache");
+  };
+
+  // ⬇️ Prefer exporting cached blob; else use API redirect
   const handleDownload = async () => {
     try {
+      const rec = await OfflineAudioStore.get(musicId);
+      if (rec?.blob) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(rec.blob);
+        const ext = rec.mime?.includes("mpeg") ? "mp3" : ""; // quick guess; expand if needed
+        a.download = `${localTitle || musicId}${ext ? "." + ext : ""}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+        toast.success("Saved from offline cache 💾");
+        return;
+      }
       await MusicService.downloadMusic(musicId);
       toast.success("Download started 💾");
     } catch (e: any) {
@@ -216,19 +192,13 @@ export default function SongCard({
   const onSaved = (updatedItem: any) => {
     if (updatedItem?.title) setLocalTitle(updatedItem.title);
     if ("albumId" in updatedItem) setLocalAlbum(updatedItem.albumId ?? null);
-    if (updatedItem?.coverUrlSigned)
-      setLocalCoverUrl(updatedItem.coverUrlSigned);
+    if (updatedItem?.coverUrlSigned) setLocalCoverUrl(updatedItem.coverUrlSigned);
     if (updatedItem?.genres) setLocalGenres(updatedItem.genres);
-
-    // 🔑 use signed URL if returned
-    if (updatedItem?.fileUrlSigned) {
-      setLocalFileUrl(updatedItem.fileUrlSigned);
-    }
-
+    // If backend returns new fileUrlSigned, parent props will update and the hook will pick it up.
     closeEdit();
   };
 
-  const disabled = !localFileUrl;
+  const disabled = !url;
   const artistsLabel = artists.length ? artists.join(", ") : null;
 
   // render up to 3 genre badges, +more if needed
@@ -256,8 +226,8 @@ export default function SongCard({
         <div className="song-card-content">
           <h6 className="song-card-title">
             {localTitle}{" "}
-            {preloaded && (
-              <span className="song-chip" title="Likely cached in browser">
+            {cached && (
+              <span className="song-chip" title="Stored for offline (IndexedDB)">
                 📦
               </span>
             )}
@@ -301,7 +271,6 @@ export default function SongCard({
             {localAlbum ? (
               <span className="album-label" title={localAlbum}>
                 <span className="song-chip">💿</span>
-
                 {localAlbum}
               </span>
             ) : (
@@ -362,12 +331,12 @@ export default function SongCard({
                 ⬇️
               </button>
 
-              {preloaded ? (
+              {cached ? (
                 <button
                   type="button"
                   className="song-action-btn"
                   onClick={handleRemoveOffline}
-                  title="Reset preload hint"
+                  title="Remove offline copy"
                 >
                   🗑️📦
                 </button>
@@ -376,9 +345,10 @@ export default function SongCard({
                   type="button"
                   className="song-action-btn"
                   onClick={handleMakeAvailableOffline}
-                  title='Make available "offline" (browser cache)'
+                  title='Make available "offline" (IndexedDB)'
+                  disabled={offlineBusy}
                 >
-                  📥
+                  {offlineBusy ? "…" : "📥"}
                 </button>
               )}
 
@@ -403,13 +373,8 @@ export default function SongCard({
           )}
         </div>
 
-        {/* Single audio element (browser cache only) */}
-        <audio
-          key={localFileUrl}
-          ref={audioRef}
-          src={localFileUrl}
-          preload="none"
-        />
+        {/* Single audio element (now fed by blob URL when cached) */}
+        <audio key={url} ref={audioRef} src={url} preload="none" />
       </div>
 
       {showActions && editOpen && (
