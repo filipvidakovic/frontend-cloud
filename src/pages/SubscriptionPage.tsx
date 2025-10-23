@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import SubscribeService from "../services/SubscribeService";
 import ArtistService from "../services/ArtistService";
 import type { ArtistCardProps } from "../models/Artist";
-
+import "./SubscriptionPage.css";
 export interface Subscription {
   subscriptionId: string;
   subscriptionType: string;
@@ -80,63 +80,78 @@ const SubscriptionsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="subscriptions-page p-4">
+      <h1 className="display-4 mb-3 text-center">Subscriptions</h1>
+      <p className="lead text-center mb-4">
+        Manage your favorite artists and genres 🎶
+      </p>
+
       {/* Artist Subscriptions */}
-      <h2 className="text-xl font-bold mb-4">Your Artist Subscriptions</h2>
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {artistSubs.map((sub) => {
-          const artist = artists[sub.targetId];
-          return (
-            <div
-              key={sub.subscriptionId}
-              className="rounded-xl shadow-lg border p-4 bg-white"
-            >
-              {artist ? (
-                <>
-                  <h3 className="text-lg font-semibold">
-                    {artist.name} {artist.lastname}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Subscribed on{" "}
-                    {new Date(sub.createdAt).toLocaleDateString()}
-                  </p>
-                  <p>Genres: {artist.genres?.join(", ")}</p>
-                  <p className="text-gray-700">{artist.bio}</p>
-                </>
-              ) : (
-                <p className="text-red-500">Artist data not found</p>
-              )}
-              <button
-                className="mt-2 bg-red-500  px-3 py-1 rounded-lg"
-                onClick={() => handleUnsubscribe(sub.subscriptionId)}
-              >
-                Unsubscribe
-              </button>
-            </div>
-          );
-        })}
+      <div className="discover-section">
+        <h2 className="section-heading mt-4">Your Artist Subscriptions</h2>
+        {artistSubs.length > 0 ? (
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {artistSubs.map((sub) => {
+              const artist = artists[sub.targetId];
+              return (
+                <div key={sub.subscriptionId} className="subscription-card">
+                  {artist ? (
+                    <>
+                      <h3 className="text-lg font-semibold">
+                        {artist.name} {artist.lastname}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Subscribed on{" "}
+                        {new Date(sub.createdAt).toLocaleDateString()}
+                      </p>
+                      <p>Genres: {artist.genres?.join(", ")}</p>
+                      <p className="text-gray-700">{artist.bio}</p>
+                    </>
+                  ) : (
+                    <p className="text-red-500">Artist data not found</p>
+                  )}
+                  <button
+                    className="unsubscribe-btn mt-2"
+                    onClick={() => handleUnsubscribe(sub.subscriptionId)}
+                  >
+                    Unsubscribe
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-muted text-center mt-3">
+            You are not subscribed to any artists yet 🎤
+          </p>
+        )}
       </div>
 
       {/* Genre Subscriptions */}
-      <h2 className="text-xl font-bold mt-8 mb-4">Your Genre Subscriptions</h2>
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {genreSubs.map((sub) => (
-          <div
-            key={sub.subscriptionId}
-            className="rounded-xl shadow-lg border p-4 bg-white"
-          >
-            <h3 className="text-lg font-semibold">{sub.targetId}</h3>
-            <p className="text-sm text-gray-600">
-              Subscribed on {new Date(sub.createdAt).toLocaleDateString()}
-            </p>
-            <button
-              className="mt-2 bg-red-500 px-3 py-1 rounded-lg"
-              onClick={() => handleUnsubscribe(sub.subscriptionId)}
-            >
-              Unsubscribe
-            </button>
+      <div className="discover-section">
+        <h2 className="section-heading mt-5">Your Genre Subscriptions</h2>
+        {genreSubs.length > 0 ? (
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {genreSubs.map((sub) => (
+              <div key={sub.subscriptionId} className="subscription-card">
+                <h3 className="text-lg font-semibold">{sub.targetId}</h3>
+                <p className="text-sm text-gray-600">
+                  Subscribed on {new Date(sub.createdAt).toLocaleDateString()}
+                </p>
+                <button
+                  className="unsubscribe-btn mt-2"
+                  onClick={() => handleUnsubscribe(sub.subscriptionId)}
+                >
+                  Unsubscribe
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <p className="text-muted text-center mt-3">
+            You are not subscribed to any genres yet 🎧
+          </p>
+        )}
       </div>
     </div>
   );

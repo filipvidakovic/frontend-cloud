@@ -96,3 +96,34 @@ span {
   transition: all 0.25s ease;
   white-space: nowrap;
 }
+
+/* --- Unsubscribe button (matches Subscribe style) --- */
+.unsubscribe-btn {
+  align-self: center;
+  background: linear-gradient(
+    135deg,
+    #8e44ad,
+    #6c63ff
+  ); /* obrnut redosled za vizuelni kontrast */
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+}
+
+.unsubscribe-btn:hover {
+  background: linear-gradient(135deg, #7d3cb3, #5c54e3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4);
+}
+
+.unsubscribe-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(108, 99, 255, 0.2);
+}
