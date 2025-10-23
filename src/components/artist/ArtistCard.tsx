@@ -1,14 +1,16 @@
+// src/components/artist/ArtistCard.tsx
 import React, { useMemo, useState } from "react";
 import type { ArtistCardProps } from "../../models/Artist";
 import "./ArtistCard.css";
 import SubscribeService from "../../services/SubscribeService";
 import ArtistService from "../../services/ArtistService";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom"; // 💥 NOVO: Uvoz useNavigate
 
 type Props = ArtistCardProps & {
   canEdit?: boolean;
-  onEdit?: (artistId: string) => void; // still supported if you want it
-  onDeleted?: (artistId: string) => void; // parent can still remove the card
+  onEdit?: (artistId: string) => void;
+  onDeleted?: (artistId: string) => void; 
 };
 
 const ArtistCard: React.FC<Props> = ({
@@ -22,6 +24,8 @@ const ArtistCard: React.FC<Props> = ({
   onEdit,
   onDeleted,
 }) => {
+  const navigate = useNavigate(); // 💥 Korišćenje kuke za navigaciju
+
   // ---- local displayed values (what the card shows) ----
   const [view, setView] = useState({
     name: name || "",
@@ -80,7 +84,8 @@ const ArtistCard: React.FC<Props> = ({
     }
   }
 
-  function openEdit() {
+  function openEdit(e: React.MouseEvent) {
+    e.stopPropagation(); // 💥 Zaustavi navigaciju kada se klikne na Edit
     onEdit?.(artistId);
     setShowEdit(true);
   }
@@ -124,7 +129,7 @@ const ArtistCard: React.FC<Props> = ({
 
     setSaving(true);
     try {
-      await ArtistService.updateArtist(artistId, payload);
+      const updatedArtist = await ArtistService.updateArtist(artistId, payload);
       toast.success("Artist updated");
 
       // merge payload into local view so card updates immediately
@@ -143,10 +148,25 @@ const ArtistCard: React.FC<Props> = ({
       setSaving(false);
     }
   }
+  
+  // 💥 NOVO: Handler za navigaciju
+  const handleCardClick = () => {
+    // Navigacija na rutu /artists/:artistId/songs
+    navigate(`/artists/${artistId}/songs`, { 
+        state: { 
+            artistName: `${view.name} ${view.lastname}`,
+            genres: view.genres
+        } 
+    });
+  };
 
   return (
     <>
-      <div className="card artist-card h-100">
+      {/* 💥 Cela kartica je sada klikabilna */}
+      <div 
+        className="card artist-card h-100 clickable"
+        onClick={handleCardClick}
+      >
         <div className="card-body d-flex flex-column justify-content-between p-4">
           <div className="d-flex align-items-start justify-content-between gap-3">
             <div>
@@ -163,7 +183,7 @@ const ArtistCard: React.FC<Props> = ({
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
-                  onClick={openEdit}
+                  onClick={openEdit} // Sada prima event
                   aria-label="Edit artist"
                   title="Edit"
                 >
@@ -172,7 +192,7 @@ const ArtistCard: React.FC<Props> = ({
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-danger"
-                  onClick={handleDelete}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(); }} // Zaustavi navigaciju
                   aria-label="Delete artist"
                   title="Delete"
                 >
@@ -200,15 +220,16 @@ const ArtistCard: React.FC<Props> = ({
             </div>
           )}
 
-          <button className="subscribe-btn" onClick={() => subscribe(artistId)}>
+          <button className="subscribe-btn" onClick={(e) => { e.stopPropagation(); subscribe(artistId); }}>
             🎧 Subscribe
           </button>
         </div>
       </div>
 
-      {/* ---- EDIT MODAL ---- */}
+      {/* ---- EDIT MODAL (ostali kod ostaje isti) ---- */}
       {showEdit && (
         <>
+          {/* ... Modal Markup ... */}
           <div
             className="modal fade show d-block"
             role="dialog"
@@ -255,7 +276,7 @@ const ArtistCard: React.FC<Props> = ({
                           inputMode="numeric"
                           pattern="[0-9]*"
                           value={form.age}
-                          onChange={(e) => onChange("age", e.target.value)} // keep string in form
+                          onChange={(e) => onChange("age", e.target.value)}
                           placeholder={
                             view.age != null ? String(view.age) : "(optional)"
                           }

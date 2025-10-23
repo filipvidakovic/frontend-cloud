@@ -240,6 +240,34 @@ async getSignedGetUrl(musicId: string): Promise<string> {
   return signed;
 }
 
+async getSongsByArtistId(
+    artistId: string,
+    opts?: { offset?: number; limit?: number }
+  ): Promise<Song[]> {
+    if (!artistId) throw new Error("artistId is required");
+
+    const token = getJwt();
+    try {
+      const res = await axios.get(
+        `${API_URL}/music/by-artist/${encodeURIComponent(artistId)}`,
+        {
+          params: {
+            ...(opts?.offset != null ? { offset: opts.offset } : {}),
+            ...(opts?.limit != null ? { limit: opts.limit } : {}),
+          },
+          headers: {
+            // NOTE: omit Content-Type on GET to avoid unnecessary preflight
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      return res.data as Song[]; // same array shape as batchGetByIds
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || "Failed to load artist songs";
+      throw new Error(msg);
+    }
+  }
+
 
 }
 
