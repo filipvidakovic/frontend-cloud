@@ -273,24 +273,40 @@ export default function SongCard({
             </div>
           )}
 
-          <div className="song-card-line song-card-meta">
+          {/* Genres line */}
+          <div className="song-card-line song-card-genres">
             <span className="song-chip">🏷️</span>
             <div className="genre-badges" title={localGenres.join(", ")}>
-              {genreBadges.shown.map((g) => (
-                <span className="genre-badge" key={g}>
-                  {g}
-                </span>
-              ))}
-              {genreBadges.rest > 0 && (
-                <span className="genre-badge genre-badge-muted">
-                  +{genreBadges.rest}
-                </span>
-              )}
-              {localAlbum && <span className="meta-dot">•</span>}
-              {localAlbum && (
-                <span className="album-label">Album: {localAlbum}</span>
+              {localGenres.length > 0 ? (
+                <>
+                  {genreBadges.shown.map((g) => (
+                    <span className="genre-badge" key={g}>
+                      {g}
+                    </span>
+                  ))}
+                  {genreBadges.rest > 0 && (
+                    <span className="genre-badge genre-badge-muted">
+                      +{genreBadges.rest}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="placeholder">&nbsp;</span>
               )}
             </div>
+          </div>
+
+          {/* Album line */}
+          <div className="song-card-line song-card-album">
+            {localAlbum ? (
+              <span className="album-label" title={localAlbum}>
+                <span className="song-chip">💿</span>
+
+                {localAlbum}
+              </span>
+            ) : (
+              <span className="placeholder">&nbsp;</span>
+            )}
           </div>
         </div>
 

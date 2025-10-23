@@ -42,11 +42,88 @@ span {
   display: inline-flex;
   gap: 8px;
 }
-.genre-badge {
-  background: #f1f3f5;
-  color: #343a40;
-  border: 1px solid #e9ecef;
-}
+
 /* basic support for the manually-mounted modal */
-.modal { display: block; }
-.modal-backdrop.show { opacity: .5; }
+.modal {
+  display: block;
+}
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+/* ---- Subscribe button (modern Spotify style) ---- */
+.subscribe-btn {
+  align-self: center;
+  background: linear-gradient(135deg, #6c63ff, #8e44ad);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+}
+
+.subscribe-btn:hover {
+  background: linear-gradient(135deg, #5c54e3, #7d3cb3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4);
+}
+
+.subscribe-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(108, 99, 255, 0.2);
+}
+
+.subscribe-btn:focus {
+  outline: none;
+}
+/* --- ArtistCard genre badges (Spotify-style) --- */
+.artist-card .genre-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4b3dbb; /* tvoja ljubičasta */
+  background: #ece8ff; /* nežna pastelna pozadina */
+  border: 1px solid #e0d4ff;
+  border-radius: 20px; /* zaobljeni kao tag */
+  letter-spacing: 0.2px;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+/* --- Unsubscribe button (matches Subscribe style) --- */
+.unsubscribe-btn {
+  align-self: center;
+  background: linear-gradient(
+    135deg,
+    #8e44ad,
+    #6c63ff
+  ); /* obrnut redosled za vizuelni kontrast */
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+}
+
+.unsubscribe-btn:hover {
+  background: linear-gradient(135deg, #7d3cb3, #5c54e3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4);
+}
+
+.unsubscribe-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(108, 99, 255, 0.2);
+}

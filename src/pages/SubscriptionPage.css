@@ -1,0 +1,84 @@
+/* --- Compact subscription cards --- */
+.subscription-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 0.9rem 1rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.subscription-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.subscription-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 0.3rem;
+}
+
+.subscription-card p {
+  margin: 0.1rem 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* Unsubscribe button smaller version (matches subscribe style) */
+.unsubscribe-btn {
+  align-self: center;
+  background: linear-gradient(135deg, #8e44ad, #6c63ff);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.35rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(108, 99, 255, 0.3);
+}
+
+.unsubscribe-btn:hover {
+  background: linear-gradient(135deg, #7d3cb3, #5c54e3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(108, 99, 255, 0.35);
+}
+
+.unsubscribe-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(108, 99, 255, 0.25);
+}
+/* ===== Section headings (match Discover page) ===== */
+.section-heading {
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #444;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #6f42c1;
+  padding-left: 10px;
+}
+
+/* Optional spacing for consistent layout */
+.subscriptions-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.subscriptions-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+/* Tweak spacing for discover-style section on subscriptions */
+.discover-section {
+  margin-top: 2rem; /* manji razmak iznad */
+  border-top: 1px solid #ddd;
+  padding-top: 0.6rem; /* smanjeno sa 1.5rem */
+}

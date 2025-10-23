@@ -7,8 +7,8 @@ import { toast } from "react-toastify";
 
 type Props = ArtistCardProps & {
   canEdit?: boolean;
-  onEdit?: (artistId: string) => void;      // still supported if you want it
-  onDeleted?: (artistId: string) => void;   // parent can still remove the card
+  onEdit?: (artistId: string) => void; // still supported if you want it
+  onDeleted?: (artistId: string) => void; // parent can still remove the card
 };
 
 const ArtistCard: React.FC<Props> = ({
@@ -26,9 +26,9 @@ const ArtistCard: React.FC<Props> = ({
   const [view, setView] = useState({
     name: name || "",
     lastname: lastname || "",
-    age: typeof age === "number" ? age : undefined as number | undefined,
+    age: typeof age === "number" ? age : (undefined as number | undefined),
     bio: bio || "",
-    genres: Array.isArray(genres) ? genres : [] as string[],
+    genres: Array.isArray(genres) ? genres : ([] as string[]),
   });
 
   // ---- edit modal state ----
@@ -56,13 +56,20 @@ const ArtistCard: React.FC<Props> = ({
   }, [showEdit, view.name, view.lastname, view.age, view.bio, view.genres]);
 
   function subscribe(artistId: string): void {
-    const data = { type: "artist", id: artistId, action: "subscribe", userId: undefined };
+    const data = {
+      type: "artist",
+      id: artistId,
+      action: "subscribe",
+      userId: undefined,
+    };
     SubscribeService.subscribe(data);
     toast.success("Subscribed to artist");
   }
 
   async function handleDelete() {
-    const ok = window.confirm(`Delete artist "${view.name} ${view.lastname}"? This cannot be undone.`);
+    const ok = window.confirm(
+      `Delete artist "${view.name} ${view.lastname}"? This cannot be undone.`
+    );
     if (!ok) return;
     try {
       await ArtistService.deleteArtist(artistId);
@@ -81,8 +88,11 @@ const ArtistCard: React.FC<Props> = ({
     if (!saving) setShowEdit(false);
   }
 
-  function onChange<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
-    setForm(prev => ({ ...prev, [key]: val }));
+  function onChange<K extends keyof typeof form>(
+    key: K,
+    val: (typeof form)[K]
+  ) {
+    setForm((prev) => ({ ...prev, [key]: val }));
   }
 
   async function saveEdit(e: React.FormEvent) {
@@ -107,9 +117,10 @@ const ArtistCard: React.FC<Props> = ({
 
     const parsedGenres = form.genresText
       .split(",")
-      .map(g => g.trim())
+      .map((g) => g.trim())
       .filter(Boolean);
-    if (parsedGenres.length > 0) payload.genres = Array.from(new Set(parsedGenres));
+    if (parsedGenres.length > 0)
+      payload.genres = Array.from(new Set(parsedGenres));
 
     setSaving(true);
     try {
@@ -117,10 +128,10 @@ const ArtistCard: React.FC<Props> = ({
       toast.success("Artist updated");
 
       // merge payload into local view so card updates immediately
-      setView(prev => ({
+      setView((prev) => ({
         name: payload.name ?? prev.name,
         lastname: payload.lastname ?? prev.lastname,
-        age: (payload.age !== undefined ? payload.age : prev.age),
+        age: payload.age !== undefined ? payload.age : prev.age,
         bio: payload.bio ?? prev.bio,
         genres: payload.genres ?? prev.genres,
       }));
@@ -173,7 +184,9 @@ const ArtistCard: React.FC<Props> = ({
 
           {view.bio && (
             <p className="card-text artist-bio mb-3">
-              {view.bio.length > 100 ? view.bio.substring(0, 100) + "..." : view.bio}
+              {view.bio.length > 100
+                ? view.bio.substring(0, 100) + "..."
+                : view.bio}
             </p>
           )}
 
@@ -187,11 +200,8 @@ const ArtistCard: React.FC<Props> = ({
             </div>
           )}
 
-          <button
-            className="btn btn-sm btn-outline-primary mb-1"
-            onClick={() => subscribe(artistId)}
-          >
-            Subscribe
+          <button className="subscribe-btn" onClick={() => subscribe(artistId)}>
+            🎧 Subscribe
           </button>
         </div>
       </div>
@@ -199,7 +209,11 @@ const ArtistCard: React.FC<Props> = ({
       {/* ---- EDIT MODAL ---- */}
       {showEdit && (
         <>
-          <div className="modal fade show d-block" role="dialog" aria-modal="true">
+          <div
+            className="modal fade show d-block"
+            role="dialog"
+            aria-modal="true"
+          >
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <form onSubmit={saveEdit}>
@@ -220,7 +234,7 @@ const ArtistCard: React.FC<Props> = ({
                         <input
                           className="form-control"
                           value={form.name}
-                          onChange={e => onChange("name", e.target.value)}
+                          onChange={(e) => onChange("name", e.target.value)}
                           required
                         />
                       </div>
@@ -229,7 +243,7 @@ const ArtistCard: React.FC<Props> = ({
                         <input
                           className="form-control"
                           value={form.lastname}
-                          onChange={e => onChange("lastname", e.target.value)}
+                          onChange={(e) => onChange("lastname", e.target.value)}
                           required
                         />
                       </div>
@@ -241,8 +255,10 @@ const ArtistCard: React.FC<Props> = ({
                           inputMode="numeric"
                           pattern="[0-9]*"
                           value={form.age}
-                          onChange={e => onChange("age", e.target.value)}  // keep string in form
-                          placeholder={view.age != null ? String(view.age) : "(optional)"}
+                          onChange={(e) => onChange("age", e.target.value)} // keep string in form
+                          placeholder={
+                            view.age != null ? String(view.age) : "(optional)"
+                          }
                         />
                       </div>
 
@@ -252,15 +268,19 @@ const ArtistCard: React.FC<Props> = ({
                           className="form-control"
                           rows={3}
                           value={form.bio}
-                          onChange={e => onChange("bio", e.target.value)}
+                          onChange={(e) => onChange("bio", e.target.value)}
                         />
                       </div>
                       <div className="col-12">
-                        <label className="form-label">Genres (comma-separated)</label>
+                        <label className="form-label">
+                          Genres (comma-separated)
+                        </label>
                         <input
                           className="form-control"
                           value={form.genresText}
-                          onChange={e => onChange("genresText", e.target.value)}
+                          onChange={(e) =>
+                            onChange("genresText", e.target.value)
+                          }
                           placeholder="rock, indie, pop"
                         />
                         <small className="text-muted">
@@ -279,7 +299,11 @@ const ArtistCard: React.FC<Props> = ({
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={saving}
+                    >
                       {saving ? "Saving…" : "Save changes"}
                     </button>
                   </div>
