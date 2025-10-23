@@ -193,26 +193,38 @@ class MusicService {
       throw new Error(error.response?.data?.error || "Failed to fetch songs");
     }
   }
-  // async startTranscription (songId: string) {
-  //   const token = localStorage.getItem("token");
-  //   const res = await axios.post(
-  //     `${API_URL}/transcriptions/start`,
-  //     { songId },
-  //     {
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         ...(token && { Authorization: `Bearer ${token}` }),
-  //       },
-  //     }
-  //   );
-  //   return res.data;
-  // }
 
-  async getTranscription(musicId: string) {
-    const res = await fetch(`/api/transcriptions/${musicId}`);
-    if (!res.ok) throw new Error("Failed to fetch transcription");
-    return res.json();
+async getTranscription(musicId: string) {
+  try {
+    const token = getJwt();
+    console.log("Fetching transcription for:", musicId);
+    
+    const res = await axios.get(`${API_URL}/transcriptions/${musicId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      timeout: 10000,
+    });
+    
+    console.log("Transcription response:", res.data);
+    return res.data;
+    
+  } catch (error: any) {
+    console.error("Transcription fetch error:", error);
+    if (error.response) {
+      // Server responded with error status
+      throw new Error(`Transcription error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`);
+    } else if (error.request) {
+      // Request made but no response
+      throw new Error('Network error: Could not connect to server');
+    } else {
+      // Something else happened
+      throw new Error(`Error: ${error.message}`);
+    }
   }
+}
+
 }
 
 export default new MusicService();
