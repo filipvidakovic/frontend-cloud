@@ -51,6 +51,8 @@ const DiscoverPage: React.FC = () => {
             await MusicService.getAlbumsByGenre(urlGenre),
             await ArtistService.getArtistsByGenre(urlGenre),
           ]);
+          console.log("Albums fetched:", albumsRes);
+          console.log("Artists fetched:", artistsRes);
           if (cancel) return;
           setAlbums(albumsRes);
           setArtists(artistsRes);
@@ -169,16 +171,16 @@ const DiscoverPage: React.FC = () => {
       {error && <p className="text-danger text-center">{error}</p>}
 
       {!loading && albums.length > 0 && (
-        <div className="mb-5">
-          <h2 className="mb-3">Albums</h2>
-          {albums && <AlbumList albums={albums} genre={genre} />}
+        <div className="discover-section mb-5">
+          <h2 className="section-heading">Albums</h2>
+          <AlbumList albums={albums} />
         </div>
       )}
 
       {!loading && artists.length > 0 && (
-        <div className="mb-5">
-          <h2 className="mb-3">Artists</h2>
-          {artists && <ArtistList artists={artists} />}
+        <div className="discover-section mb-5">
+          <h2 className="section-heading">Artists</h2>
+          <ArtistList artists={artists} />
         </div>
       )}
 
