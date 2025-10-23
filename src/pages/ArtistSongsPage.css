@@ -1,0 +1,76 @@
+/* ArtistSongsPage.css */
+
+.artist-songs-container {
+  /* Koristimo iste razmake kao i album-detail-container za ujednačen izgled */
+  padding-top: 1rem;
+}
+
+.artist-songs-header {
+  /* Isti raspored za naslov i dugme nazad */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Ili koristite flex-start ako su svi elementi na levoj strani */
+  margin-bottom: 1rem;
+  /* Ako koristite Bootstrap utilities kao u TSX fajlu, ovo je opciono: */
+  /* padding-bottom: 0.5rem; 
+  border-bottom: 1px solid #eee; */
+}
+
+.artist-songs-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.artist-songs-title {
+  /* Malo veći naslov za isticanje imena izvođača */
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Stil za dugme 'Back' ako ne koristite Bootstrap klase za dugme */
+.artist-songs-back {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 0.25rem;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.artist-songs-back:hover {
+  background-color: #f0f0f0;
+}
+
+/* Stilovi za bedževe (žanrove) */
+.artist-songs-genre-badge {
+  font-size: 0.8rem;
+  /* Koristite boju sličnu glavnoj boji aplikacije */
+  background-color: #007bff; 
+  color: #fff;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Kontejner za SongCard komponente */
+.artist-songs-list {
+  /* Ako koristite column layout: */
+  /* display: flex;
+  flex-direction: column;
+  gap: 0.75rem; */
+
+  /* Ako koristite grid/row layout (kao što je predloženo u TSX kodu sa .row i .col-lg-6): */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1rem;
+}
+
+/* Stil za poruke o grešci/učitanju */
+.artist-songs-message {
+  text-align: center;
+  color: #6c757d;
+  padding: 2rem 0;
+  font-size: 0.95rem;
+}
