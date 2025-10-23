@@ -1,4 +1,4 @@
-type TrackRecord = {
+export type TrackRecord = {
   musicId: string;
   blob: Blob;
   mime: string;

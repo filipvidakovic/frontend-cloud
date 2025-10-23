@@ -1,5 +1,5 @@
 // src/services/OfflineAudio.ts
-import { OfflineAudioStore } from "./OfflineAudioStore";
+import { OfflineAudioStore, type TrackRecord } from "./OfflineAudioStore";
 
 export async function fetchAndCacheTrack(musicId: string, signedUrl: string): Promise<void> {
   // Minimal CORS-friendly fetch: no headers, no credentials
