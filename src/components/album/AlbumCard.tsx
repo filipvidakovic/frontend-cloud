@@ -6,16 +6,18 @@ import { Link } from "react-router-dom";
 
 const AlbumCard: React.FC<AlbumCardProps> = ({
   albumId,
-  genre,
-  titleList,   // kept only as a fallback for counting
+  genres = [],
+  titleList,
   coverUrl,
   musicIds,
 }) => {
+  console.log("AlbumCard props:", { albumId, genres });
+
   const handleClick = () => {
     try {
       sessionStorage.setItem(
         `album:${albumId}`,
-        JSON.stringify({ genre, musicIds })
+        JSON.stringify({ genres, musicIds })
       );
     } catch {}
   };
@@ -29,37 +31,40 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
   return (
     <Link
       to={`/albums/${encodeURIComponent(albumId)}`}
-      state={{ genre, musicIds }}
+      state={{ genres, musicIds }}
       onClick={handleClick}
-      className="text-decoration-none text-dark d-block"
+      className="album-card-link"
       aria-label={`Open album ${albumId}`}
     >
-      <div className="card album-card h-100">
-        <div className="row g-0 h-100">
-          {/* Cover */}
-          <div className="col-5 col-md-4 d-flex align-items-center justify-content-center bg-light rounded-start">
-            <img
-              src={coverUrl}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = albumPlaceholder;
-              }}
-              alt={`Album cover for ${albumId}`}
-              className="img-fluid rounded-start album-cover"
-            />
-          </div>
+      <div className="album-card shadow-sm">
+        <div className="album-cover-wrapper">
+          <img
+            src={coverUrl || albumPlaceholder}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = albumPlaceholder;
+            }}
+            alt={`Album cover for ${albumId}`}
+            className="album-cover"
+          />
+        </div>
 
-          {/* Content */}
-          <div className="col-7 col-md-8">
-            <div className="card-body d-flex flex-column justify-content-center h-100 p-4">
-              <h5 className="card-title album-title mb-2">{albumId}</h5>
-
-              <div className="d-flex align-items-center gap-2">
-                <span className="badge genre-badge">{genre}</span>
-                <small className="text-muted">
-                  {trackCount} {trackCount === 1 ? "track" : "tracks"}
-                </small>
-              </div>
+        <div className="album-info">
+          <h5 className="album-title">{albumId}</h5>
+          <div className="album-meta">
+            <div className="album-genres">
+              {genres.length > 0 ? (
+                genres.map((g, i) => (
+                  <span key={i} className="album-genre-badge">
+                    {g}
+                  </span>
+                ))
+              ) : (
+                <span className="album-genre-badge">Unknown</span>
+              )}
             </div>
+            <span className="album-tracks">
+              {trackCount} {trackCount === 1 ? "track" : "tracks"}
+            </span>
           </div>
         </div>
       </div>
