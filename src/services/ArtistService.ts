@@ -71,27 +71,13 @@ class ArtistService {
 
   async deleteArtist(artistId: string) {
   const token = localStorage.getItem("token");
-  try {
-    const url = `${API_URL}/artists/${encodeURIComponent(artistId)}`;
-    const res = await axios.delete(url, {
-      data: { artistId }, // harmless; DELETE bodies are quirky in browsers—axios wants data key
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    return res.data;
-  } catch (errFirst: any) {
-    // Fallback if your API only exposes POST
-    const res = await axios.post(`${API_URL}/artists/delete`, { artistId }, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    return res.data;
-  }
+  const url = `${API_URL}/artists/${artistId}`; 
+  const res = await axios.delete(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  return res.data;
 }
+
 
 async updateArtist(artistId: string, data: Partial<ArtistCardProps> & {
   age?: number; bio?: string; genres?: string[]; name?: string; lastname?: string;
