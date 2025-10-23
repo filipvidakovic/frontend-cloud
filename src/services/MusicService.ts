@@ -207,6 +207,24 @@ class MusicService {
   //   );
   //   return res.data;
   // }
+async deleteSongsByIds(musicIds: string[]) {
+  if (!Array.isArray(musicIds) || musicIds.length === 0) {
+    throw new Error("musicIds (non-empty array) is required");
+  }
+  const token = localStorage.getItem("token");
+  const res = await axios.post(
+    `${API_URL}/music/deleteBatch`,           // ← API route for your new Lambda
+    { musicIds },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+  );
+  return res.data; 
+}
+
 
   async getTranscription(musicId: string) {
     const res = await fetch(`/api/transcriptions/${musicId}`);
