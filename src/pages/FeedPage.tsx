@@ -4,7 +4,7 @@ import SongCard from "../components/song/SongCard";
 import type { SongCardProps } from "../components/song/SongCard";
 import type { AlbumCardProps } from "../models/Album";
 import UserService from "../services/UserService";
-
+import "./FeedPage.css";
 const FeedPage: React.FC = () => {
   const [albums, setAlbums] = useState<AlbumCardProps[]>([]);
   const [songs, setSongs] = useState<SongCardProps[]>([]);
@@ -21,9 +21,38 @@ const FeedPage: React.FC = () => {
         console.log("Raw feed response:", res);
 
         if (cancel) return;
+        console.log(
+          "Albums after map:",
+          (res.albums || []).map((a: any) => a.genres)
+        );
 
-        setSongs(res.songs || []);
-        setAlbums(res.albums || []);
+        const newSongs = res.songs || [];
+
+        const mapped: SongCardProps[] = newSongs.map((song: any) => ({
+          musicId: song.musicId,
+          title: song.title,
+          genres: song.genres || [],
+          album: song.albumId ?? null,
+          fileUrl: song.fileUrl ?? "",
+          coverUrl: song.coverUrl ?? null,
+          artists: [],
+        }));
+
+        setSongs(mapped);
+        setAlbums(
+          (res.albums || []).map((a: any) => {
+            const songWithCover = res.songs.find(
+              (s: any) => s.albumId === a.albumId && s.coverUrl
+            );
+            return {
+              albumId: a.albumId,
+              genres: a.genres || [],
+              titleList: a.songs?.map((s: any) => s.title) || [],
+              coverUrl: songWithCover?.coverUrl || a.coverUrl || "",
+              musicIds: a.songs || [],
+            };
+          })
+        );
       } catch (err: any) {
         if (cancel) return;
         console.error("Error fetching feed:", err.response || err);
@@ -50,8 +79,8 @@ const FeedPage: React.FC = () => {
 
       {/* SONGS FIRST */}
       {!loading && songs.length > 0 && (
-        <div className="mb-5">
-          <h2 className="mb-3">Recommended Songs</h2>
+        <div className="feed-section mb-5">
+          <h2 className="section-heading">Recommended Songs</h2>
           <div className="container">
             <div className="row">
               {songs.map((song) => (
@@ -66,9 +95,9 @@ const FeedPage: React.FC = () => {
 
       {/* ALBUMS AFTER SONGS */}
       {!loading && albums.length > 0 && (
-        <div className="mb-5">
-          <h2 className="mb-3">Albums</h2>
-          <AlbumList albums={albums} genre="" />
+        <div className="feed-section mb-5">
+          <h2 className="section-heading">Albums</h2>
+          <AlbumList albums={albums} />
         </div>
       )}
 
