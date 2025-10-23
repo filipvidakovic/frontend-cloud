@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import AlbumList from "../components/album/AlbumList";
 import ArtistList from "../components/artist/ArtistList";
 import type { AlbumCardProps } from "../models/Album";
@@ -80,6 +80,40 @@ const DiscoverPage: React.FC = () => {
       setError(null);
     }
   }, [urlGenre, cacheKey, navType]);
+
+  const refetchForGenre = useCallback(async (g: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [albumsRes, artistsRes] = await Promise.all([
+        MusicService.getAlbumsByGenre(g),
+        ArtistService.getArtistsByGenre(g),
+      ]);
+      setAlbums(albumsRes);
+      setArtists(artistsRes);
+      sessionStorage.setItem(
+        `discover:genre=${g}`,
+        JSON.stringify({ albums: albumsRes, artists: artistsRes })
+      );
+    } catch (err) {
+      console.error("Error refetching after delete:", err);
+      setError("Failed to refresh data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+   const handleArtistDeleted = useCallback((deletedId: string) => {
+    // 1) optimistic UI update
+    setArtists((prev) => prev.filter((a) => a.artistId !== deletedId));
+
+    // 2) invalidate cache for current genre
+    if (urlGenre) {
+      sessionStorage.removeItem(cacheKey);
+      // 3) refetch fresh data for the same genre in background
+      refetchForGenre(urlGenre);
+    }
+  }, [cacheKey, refetchForGenre, urlGenre]);
 
   const handleSearch = async () => {
     const g = searchInput.trim();
@@ -180,7 +214,7 @@ const DiscoverPage: React.FC = () => {
       {!loading && artists.length > 0 && (
         <div className="discover-section mb-5">
           <h2 className="section-heading">Artists</h2>
-          <ArtistList artists={artists} />
+          <ArtistList artists={artists} onDeleted={handleArtistDeleted} />
         </div>
       )}
 

@@ -1,134 +1,132 @@
-
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import SongCard from "../components/song/SongCard";
-import ArtistService from "../services/ArtistService";
-import type { Song } from "../models/Song"; 
-import MusicService from "../services/MusicService";
 import "./ArtistSongsPage.css";
+import SongCard from "../components/song/SongCard";
+import MusicService from "../services/MusicService";
+import type { Song } from "../models/Song";
 
-interface LocationState {
-    artistName?: string;
-    genres?: string[];
-}
+type LocationState = { artistName?: string; genres?: string[] };
 
 export default function ArtistSongsPage() {
-    const { artistId = "" } = useParams<{ artistId: string }>();
-    const location = useLocation();
-    const navigate = useNavigate();
-    
-    // Dohvati podatke o izvođaču iz state-a navigacije (ako postoje)
-    const state = (location.state as LocationState) || {};
-    const artistName = state.artistName || "Unknown Artist";
+  const { artistId = "" } = useParams<{ artistId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation() as { state?: LocationState };
 
-    const [songs, setSongs] = useState<Song[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const artistName = useMemo(
+    () => location.state?.artistName || "Unknown Artist",
+    [location.state?.artistName]
+  );
 
-    useEffect(() => {
-        if (!artistId) {
-            setError("Missing artist ID.");
-            setLoading(false);
-            return;
-        }
+  const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [transcription, setTranscription] = useState<string | null>(null);
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
 
-        const fetchSongs = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const data = await MusicService.getSongsByArtistId(artistId);
-                setSongs(data);
-            } catch (e: any) {
-                setError(e?.message || `Failed to load songs for artist ${artistName}.`);
-                console.error("Error fetching artist songs:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
-        fetchSongs();
-    }, [artistId]);
-    
-    // Handler za uklanjanje pesme nakon brisanja
-    const handleDeleted = (removedId: string) => {
-        setSongs((prev) => prev.filter((s) => s.musicId !== removedId));
-    };
+  // load songs for artist
+  useEffect(() => {
+    (async () => {
+      if (!artistId) {
+        setErr("Missing artist ID.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setErr(null);
+        const data = await MusicService.getSongsByArtistId(artistId);
+        setSongs(Array.isArray(data) ? data : []);
+      } catch (e: any) {
+        console.error("Error fetching artist songs:", e);
+        setErr(e?.message || `Failed to load songs for artist ${artistName}.`);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [artistId, artistName]);
 
-    // Handler za ažuriranje pesme (slično kao u AlbumDetailPage)
-    const handleSongUpdated = (updatedItem: Partial<Song> & { musicId: string }) => {
-        setSongs((prevSongs) => 
-            prevSongs.map((song) => {
-                if (song.musicId === updatedItem.musicId) {
-                    // Spojite stari objekat pesme sa novim ažuriranim podacima.
-                    const updatedSong = {
-                        ...song,
-                        ...updatedItem,
-                        // KLJUČNO: Ažurirajte PROPS koje SongCard koristi
-                        fileUrl: updatedItem.fileUrlSigned || song.fileUrl,
-                        coverUrl: updatedItem.coverUrlSigned || song.coverUrl,
-                    };
-                    
-                    // Obrada albumId: dozvolite null da obriše album
-                    if ("albumId" in updatedItem) {
-                        updatedSong.albumId = updatedItem.albumId; 
-                    }
-                    
-                    return updatedSong as Song;
-                }
-                return song;
-            })
-        );
-    };
+  // transcription (optional, like Album page)
+  useEffect(() => {
+    if (!activeSongId) return;
+    (async () => {
+      try {
+        setLoadingTranscript(true);
+        setTranscription(null);
+        const res = await MusicService.getTranscription(activeSongId);
+        setTranscription(res?.transcription || "No transcription available.");
+      } catch {
+        setTranscription("Failed to load transcription.");
+      } finally {
+        setLoadingTranscript(false);
+      }
+    })();
+  }, [activeSongId]);
 
+  // remove locally after deletion
+  const handleDeleted = (removedId: string) => {
+    setSongs((prev) => prev.filter((s) => s.musicId !== removedId));
+    if (removedId === activeSongId) setActiveSongId(null);
+  };
 
-    return (
-        <div className="artist-songs-container container mt-4">
-            <div className="artist-songs-header mb-4 d-flex align-items-center">
-                <button className="btn btn-link me-3" onClick={() => navigate(-1)}>
-                    ← Back
-                </button>
-                <h2 className="mb-0">Songs by: **{artistName}**</h2>
-                {state.genres && state.genres.length > 0 && (
-                     <div className="ms-3 d-flex flex-wrap gap-2">
-                        {state.genres.map((g, i) => (
-                             <span key={i} className="badge bg-primary">
-                                {g}
-                            </span>
-                        ))}
-                     </div>
-                )}
-            </div>
-            <hr />
-
-            {loading && <div className="text-center">Loading songs...</div>}
-            {error && <div className="alert alert-danger">{error}</div>}
-            
-            {!loading && !error && songs.length === 0 && (
-                <div className="alert alert-info">No songs found for this artist.</div>
-            )}
-
-            <div className="row g-4">
-                {songs.map((s) => (
-                    <div key={s.musicId} className="col-lg-6 col-xl-4">
-                        <SongCard
-                            musicId={s.musicId}
-                            title={s.title}
-                            genres={s.genres ?? []}
-                            album={s.albumId ?? undefined}
-                            fileUrl={s.fileUrl ?? ""}
-                            coverUrl={s.coverUrl}
-                            artists={s.artists || []} // Uključite artist prop ako ga SongCard podržava
-                            initialRate={s.rate ?? null}
-                            onDeleted={handleDeleted}
-                            onPlaySelected={setActiveSongId}
-                            onUpdated={handleSongUpdated} 
-                        />
-                    </div>
-                ))}
-            </div>
-
-            {/* Opciono: Dodajte plejer/transkripciju slično AlbumPage-u ako je potrebno */}
+  return (
+    <div className="artist-detail-container">
+      <div className="artist-detail-header">
+        <div className="artist-detail-header-left">
+          <button className="artist-detail-back" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+          <h4 className="artist-detail-title">
+            Artist:&nbsp;<span className="text-muted">{artistName}</span>
+          </h4>
         </div>
-    );
+
+        {!!location.state?.genres?.length && (
+          <div className="artist-detail-genres">
+            {location.state.genres.map((g, i) => (
+              <span key={i} className="artist-detail-genre-badge">
+                {g}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {loading && <div className="artist-detail-message">Loading…</div>}
+      {!loading && err && <div className="artist-detail-message">{err}</div>}
+      {!loading && !err && songs.length === 0 && (
+        <div className="artist-detail-message">No songs found for this artist.</div>
+      )}
+
+      {!loading && !err && songs.length > 0 && (
+        <div className="artist-detail-songs">
+          {songs.map((s) => (
+            <SongCard
+              key={s.musicId}
+              musicId={s.musicId}
+              title={s.title}
+              genres={s.genres ?? []}
+              album={s.albumId ?? undefined}
+              fileUrl={s.fileUrl ?? ""}
+              coverUrl={s.coverUrl}
+              initialRate={s.rate ?? null}
+              onDeleted={handleDeleted}
+              onPlaySelected={setActiveSongId}
+              // onUpdated not required, but you can add it if your SongCard supports inline edits
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="artist-detail-transcription">
+        <h5>Transcription</h5>
+        {!activeSongId && <p>Select a song to see transcription.</p>}
+        {activeSongId && loadingTranscript && <p>Loading transcription…</p>}
+        {activeSongId && !loadingTranscript && (
+          <pre className="transcription-text">{transcription}</pre>
+        )}
+      </div>
+    </div>
+  );
 }
