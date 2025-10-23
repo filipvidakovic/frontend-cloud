@@ -115,6 +115,16 @@ const DiscoverPage: React.FC = () => {
     }
   }, [cacheKey, refetchForGenre, urlGenre]);
 
+  const handleAlbumDeleted = useCallback((deletedAlbumId: string) => {
+    // optimistic UI update
+    setAlbums(prev => prev.filter(a => a.albumId !== deletedAlbumId));
+    // invalidate cache and refetch
+    if (urlGenre) {
+      sessionStorage.removeItem(cacheKey);
+      refetchForGenre(urlGenre);
+    }
+  }, [cacheKey, refetchForGenre, urlGenre]);
+
   const handleSearch = async () => {
     const g = searchInput.trim();
     setSearchParams((prev) => {
@@ -207,7 +217,7 @@ const DiscoverPage: React.FC = () => {
       {!loading && albums.length > 0 && (
         <div className="discover-section mb-5">
           <h2 className="section-heading">Albums</h2>
-          <AlbumList albums={albums} />
+          <AlbumList albums={albums} onDeleted={handleAlbumDeleted} />
         </div>
       )}
 
