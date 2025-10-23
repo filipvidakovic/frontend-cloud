@@ -20,7 +20,7 @@ function HomePage() {
       const mapped: SongCardProps[] = newSongs.map((song: Song) => ({
         musicId: song.musicId,
         title: song.title,
-        genre: song.genre || "",
+        genres: song.genres || [],
         album: song.albumId ?? null,
         fileUrl: song.fileUrl ?? "",
         coverUrl: song.coverUrl ?? null,
