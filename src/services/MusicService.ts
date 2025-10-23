@@ -226,10 +226,34 @@ async deleteSongsByIds(musicIds: string[]) {
 }
 
 
-  async getTranscription(musicId: string) {
-    const res = await fetch(`/api/transcriptions/${musicId}`);
-    if (!res.ok) throw new Error("Failed to fetch transcription");
-    return res.json();
+async getTranscription(musicId: string) {
+  try {
+    const token = getJwt();
+    console.log("Fetching transcription for:", musicId);
+    
+    const res = await axios.get(`${API_URL}/transcriptions/${musicId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      timeout: 10000,
+    });
+    
+    console.log("Transcription response:", res.data);
+    return res.data;
+    
+  } catch (error: any) {
+    console.error("Transcription fetch error:", error);
+    if (error.response) {
+      // Server responded with error status
+      throw new Error(`Transcription error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`);
+    } else if (error.request) {
+      // Request made but no response
+      throw new Error('Network error: Could not connect to server');
+    } else {
+      // Something else happened
+      throw new Error(`Error: ${error.message}`);
+    }
   }
   // src/services/MusicService.ts (add/replace this method)
 
@@ -286,6 +310,33 @@ async getSongsByArtistId(
     }
   }
 
+async getSongsByArtistId(
+    artistId: string,
+    opts?: { offset?: number; limit?: number }
+  ): Promise<Song[]> {
+    if (!artistId) throw new Error("artistId is required");
+
+    const token = getJwt();
+    try {
+      const res = await axios.get(
+        `${API_URL}/music/by-artist/${encodeURIComponent(artistId)}`,
+        {
+          params: {
+            ...(opts?.offset != null ? { offset: opts.offset } : {}),
+            ...(opts?.limit != null ? { limit: opts.limit } : {}),
+          },
+          headers: {
+            // NOTE: omit Content-Type on GET to avoid unnecessary preflight
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      return res.data as Song[]; // same array shape as batchGetByIds
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || "Failed to load artist songs";
+      throw new Error(msg);
+    }
+  }
 
 }
 
