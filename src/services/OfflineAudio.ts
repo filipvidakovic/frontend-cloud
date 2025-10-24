@@ -1,5 +1,5 @@
 // src/services/OfflineAudio.ts
-import { OfflineAudioStore } from "./OfflineAudioStore";
+import { OfflineAudioStore, type TrackRecord } from "./OfflineAudioStore";
 
 export async function fetchAndCacheTrack(musicId: string, signedUrl: string): Promise<void> {
   // Minimal CORS-friendly fetch: no headers, no credentials
@@ -10,7 +10,7 @@ export async function fetchAndCacheTrack(musicId: string, signedUrl: string): Pr
   const blob = await res.blob();
   const etag = res.headers.get("ETag") || undefined;
   const lastModified = res.headers.get("Last-Modified") || undefined;
-  const record: any = {
+  const record: TrackRecord = {
       musicId: musicId, // ⬅️ Ključni put za IndexedDB
       blob: blob,
       mime: blob.type,
