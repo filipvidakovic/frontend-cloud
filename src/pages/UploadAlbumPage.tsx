@@ -49,7 +49,6 @@ const UploadAlbumPage: React.FC = () => {
     setShowModal(true);
   };
 
-  const closeModal = () => setShowModal(false);
 
   const resetModalForm = () => {
     setTitle("");

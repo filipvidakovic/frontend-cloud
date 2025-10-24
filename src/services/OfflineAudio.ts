@@ -10,7 +10,7 @@ export async function fetchAndCacheTrack(musicId: string, signedUrl: string): Pr
   const blob = await res.blob();
   const etag = res.headers.get("ETag") || undefined;
   const lastModified = res.headers.get("Last-Modified") || undefined;
-  const record: TrackRecord = {
+  const record: any = {
       musicId: musicId, // ⬅️ Ključni put za IndexedDB
       blob: blob,
       mime: blob.type,

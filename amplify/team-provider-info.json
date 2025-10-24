@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-oblak-dev-542a3-authRole",
+      "UnauthRoleArn": "arn:aws:iam::321775682553:role/amplify-oblak-dev-542a3-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::321775682553:role/amplify-oblak-dev-542a3-authRole",
+      "Region": "eu-central-1",
+      "DeploymentBucketName": "amplify-oblak-dev-542a3-deployment",
+      "UnauthRoleName": "amplify-oblak-dev-542a3-unauthRole",
+      "StackName": "amplify-oblak-dev-542a3",
+      "StackId": "arn:aws:cloudformation:eu-central-1:321775682553:stack/amplify-oblak-dev-542a3/e742c1b0-b066-11f0-9b12-06ef51b31365",
+      "AmplifyAppId": "d2vc5wc8p2ib1h"
+    },
+    "categories": {
+      "hosting": {
+        "S3AndCloudFront": {}
+      }
+    }
+  }
+}
