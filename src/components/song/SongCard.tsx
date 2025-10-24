@@ -54,7 +54,7 @@ export default function SongCard({
   const isAdmin = user === "admin";
 
   // ✅ Offline-first: prefer blob URL from IndexedDB; fallback to network fileUrl
-  const { url, cached, loading: offlineBusy, error: offlineErr, makeAvailable, removeAvailable } =
+  const { url, cached, loading: offlineBusy, makeAvailable, removeAvailable } =
     useOfflineTrack(musicId, fileUrl);
 
   // keep in sync if parent updates props later

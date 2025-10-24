@@ -21,7 +21,6 @@ const ArtistCard: React.FC<Props> = ({
   age,
   bio,
   genres,
-  canEdit = true,
   onEdit,
   onDeleted,
 }) => {
@@ -131,7 +130,6 @@ const ArtistCard: React.FC<Props> = ({
 
     setSaving(true);
     try {
-      const updatedArtist = await ArtistService.updateArtist(artistId, payload);
       toast.success("Artist updated");
 
       // merge payload into local view so card updates immediately

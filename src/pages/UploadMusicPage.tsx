@@ -147,7 +147,6 @@ const UploadMusicPage: React.FC = () => {
     setResponse(data);
 
     const titleShown = (data?.title ?? title).toString();
-    const idShown = (data?.musicId ?? "").toString();
     const genresShown = Array.isArray(data?.genres) && data.genres.length
       ? data.genres.join(", ")
       : genres;
